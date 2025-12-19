@@ -1,0 +1,4 @@
+- l'intervallo non viene calcolato correttamente
+a - c viene dato come grosse terze
+
+- di conseguenza un test in LilyNote (NoteParserTest) non funziona
