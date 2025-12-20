@@ -1,13 +1,14 @@
 package notation;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import Measure.Partial;
 import Measure.TimeSignature;
 import musicInterface.MusicObject;
 
-public class Staff {
+public class Staff implements Iterable<Voice>{
 
 	private List<Voice> voices;
 	private TimeSignature timeSignature;
@@ -95,6 +96,11 @@ public class Staff {
 	public void setPartial(Partial p) {
 		partial = p;
 		
+	}
+
+	@Override
+	public Iterator<Voice> iterator() {
+		return voices.iterator();
 	}
 	
 }

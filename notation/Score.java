@@ -2,6 +2,7 @@ package notation;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JOptionPane;
@@ -11,7 +12,7 @@ import Measure.TimeSignature;
 import musicEvent.NoteEvent;
 import musicInterface.MusicObject;
 
-public class Score implements Serializable {
+public class Score implements Serializable, Iterable<Staff> {
 
 	private ArrayList<Staff> staffList;
 	private TimeSignature time;
@@ -77,7 +78,7 @@ public class Score implements Serializable {
     
 	/** Aggiunge un oggetto allo staff e alla voce indicata */
 	public void addObject(MusicObject obj, int staffNumber, int voiceNumber) {
-		System.out.println("Object added at Staff "+staffNumber+" and voice "+voiceNumber);
+		System.out.println("MusicObject added at Staff "+staffNumber+" and voice "+voiceNumber);
 		staffList.get(staffNumber).getVoice(voiceNumber).addObject(obj);
 	}
 
@@ -98,13 +99,13 @@ public class Score implements Serializable {
 	 * Restituisce tutti gli oggetti di uno staff, di tutti i layer.
 	 * Restituisce una lista vuota se lo staffNumber non è valido.
 	 */
-	public List<Object> getObjects(int staffNumber) {
+	public List<MusicObject> getObjects(int staffNumber) {
 	    if (staffNumber < 0 || staffNumber >= staffList.size()) {
 	        return List.of(); // lista immutabile vuota
 	    }
 
 	    Staff staff = staffList.get(staffNumber);
-	    List<Object> all = new ArrayList<>();
+	    List<MusicObject> all = new ArrayList<>();
 
 	    for (Voice layer : staff.getVoices()) {
 	        all.addAll(layer.getObjects());
@@ -144,7 +145,7 @@ public class Score implements Serializable {
 
 	    List<NoteEvent> notes = new ArrayList<>();
 	    
-	    for (Object o : layer.getObjects()) {
+	    for (MusicObject o : layer.getObjects()) {
 	        if (o instanceof NoteEvent note) {
 	            notes.add(note);
 	        }
@@ -159,8 +160,8 @@ public class Score implements Serializable {
 	}
 
 	/** restituisce una lista con tutti gli oggetti di tutti gli staves */
-	public List<Object> getAllObjects() {
-	    List<Object> all = new ArrayList<>();
+	public List<MusicObject> getAllObjects() {
+	    List<MusicObject> all = new ArrayList<>();
 	    for (Staff staff : staffList) {
 	        for (Voice v : staff.getVoices()) {
 	            all.addAll(v.getObjects());
@@ -364,5 +365,10 @@ public class Score implements Serializable {
 			list.add(lyric.getSyllable().getText());
 		}
 		return list;
+	}
+
+	@Override
+	public Iterator<Staff> iterator() {
+		return staffList.iterator();
 	}
 }

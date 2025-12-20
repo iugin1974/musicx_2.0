@@ -1,13 +1,14 @@
 package notation;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import musicEvent.Note;
 import musicEvent.NoteEvent;
 import musicInterface.MusicObject;
 
-public class Voice {
+public class Voice implements Iterable<MusicObject> {
 
     private final int voiceNumber;
     private final List<MusicObject> objects;
@@ -64,5 +65,10 @@ public class Voice {
 	
 	public int size() {
 		return objects.size();
+	}
+
+	@Override
+	public Iterator<MusicObject> iterator() {
+		return objects.iterator();
 	}
 }
