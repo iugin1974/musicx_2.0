@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import musicInterface.MusicObject;
 
-public class Rest extends MusicEvent implements Serializable, MusicObject  {
+public class Rest extends MusicEvent implements Serializable  {
 
 	public Rest(int duration, int dots) {
 		super(duration, dots);

@@ -13,35 +13,35 @@ public class Voice implements Iterable<MusicObject> {
     private final int voiceNumber;
     private final List<MusicObject> objects;
 
-    public Voice(int voiceNumber) {
+    protected Voice(int voiceNumber) {
         this.voiceNumber = voiceNumber;
         this.objects = new ArrayList<>();
     }
 
     /** Restituisce il tipo di voice */
-    public int getVoiceType() {
+    protected int getVoiceType() {
         return voiceNumber;
     }
 
     /** Aggiunge un oggetto al layer */
-    public void addObject(MusicObject o) {
+    protected void addObject(MusicObject o) {
         if (o != null) {
             objects.add(o);
         }
     }
 
     /** Rimuove un oggetto dal layer */
-    public boolean removeObject(MusicObject o) {
+    protected boolean removeObject(MusicObject o) {
         return objects.remove(o);
     }
 
     /** Restituisce tutti gli oggetti del layer (modificabile) */
-    public List<MusicObject> getObjects() {
+    protected List<MusicObject> getObjects() {
         return objects;
     }
     
     /** Restituisce solo le note **/
-    public List<NoteEvent> getNotes() {
+    protected List<NoteEvent> getNotes() {
     	List<NoteEvent> notes = new ArrayList<>();
     	for (MusicObject object : objects) {
     		if (object instanceof NoteEvent)
@@ -50,20 +50,20 @@ public class Voice implements Iterable<MusicObject> {
     	return notes;
     }
     
-    public MusicObject get(int i) {
+    protected MusicObject get(int i) {
     	return objects.get(i);
     }
 
     /** Pulisce tutti gli oggetti dal layer */
-    public void clear() {
+    protected void clear() {
         objects.clear();
     }
     
-	public boolean isEmpty() {
+	protected boolean isEmpty() {
 		return objects.isEmpty();
 	}
 	
-	public int size() {
+	protected int size() {
 		return objects.size();
 	}
 

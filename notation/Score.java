@@ -7,13 +7,19 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
+import Measure.Bar;
 import Measure.Partial;
 import Measure.TimeSignature;
+import musicEvent.MusicEvent;
+import musicEvent.Note;
 import musicEvent.NoteEvent;
+import musicEvent.Rest;
 import musicInterface.MusicObject;
+import notation.ScoreEvent.Type;
 
 public class Score implements Serializable, Iterable<Staff> {
 
+	private ArrayList<ScoreListener> listeners;
 	private ArrayList<Staff> staffList;
 	private TimeSignature time;
 	private Partial partial;
@@ -21,6 +27,7 @@ public class Score implements Serializable, Iterable<Staff> {
 
 	public Score() {
 		staffList = new ArrayList<>();
+		listeners = new ArrayList<>();
 	}
 
 	public Staff getStaff(int n) {
@@ -29,7 +36,10 @@ public class Score implements Serializable, Iterable<Staff> {
 
 	/** crea uno staff */
 	public void addStaff() {
-		staffList.add(new Staff());
+		Staff s = new Staff();
+		staffList.add(s);
+		ScoreEvent e = new ScoreEvent(ScoreEvent.Type.STAFF_ADDED, s, staffList.size() - 1, -1);
+		fireChanged(e);
 	}
 
 	public void setTimeSignature(TimeSignature time) {
@@ -77,9 +87,28 @@ public class Score implements Serializable, Iterable<Staff> {
     }
     
 	/** Aggiunge un oggetto allo staff e alla voce indicata */
-	public void addObject(MusicObject obj, int staffNumber, int voiceNumber) {
-		System.out.println("MusicObject added at Staff "+staffNumber+" and voice "+voiceNumber);
-		staffList.get(staffNumber).getVoice(voiceNumber).addObject(obj);
+	public void addObject(MusicObject obj, int staffIndex, int voiceIndex) {
+		// se non ci sono abbastanza voci per lo staff, vengono create
+		Staff s = staffList.get(staffIndex);
+		int v = s.getNumberOfVoices();
+		for (int i = v; i <= voiceIndex; i++) {
+		    s.addVoice();
+		}
+		if (obj instanceof MusicEvent) obj.setVoice(voiceIndex);
+		else obj.setVoice(0);
+		s.getVoice(voiceIndex).addObject(obj);
+		ScoreEvent e = null;
+		if (obj instanceof Note) {
+			e = new ScoreEvent(ScoreEvent.Type.NOTE_ADDED, (Note)obj, staffIndex, voiceIndex);
+		} else if (obj instanceof Rest) {
+			e = new ScoreEvent(ScoreEvent.Type.REST_ADDED, (Rest)obj, staffIndex, voiceIndex);
+		} else if (obj instanceof Bar) {
+			e = new ScoreEvent(ScoreEvent.Type.BARLINE_ADDED, (Bar)obj, staffIndex, 0);
+		} else if (obj instanceof Rest) {
+			e = new ScoreEvent(ScoreEvent.Type.CLEF_ADDED, (Clef)obj, staffIndex, 0);
+		}
+		 
+		fireChanged(e);
 	}
 
 	/** Restituisce la lista degli oggetti di uno staff e voce specifici */
@@ -242,7 +271,7 @@ public class Score implements Serializable, Iterable<Staff> {
 	}
 
 	/** Restituisce la VoiceLayer che contiene la nota, oppure null. */
-	public Voice getVoiceOf(NoteEvent startNote) {
+	public Voice getVoiceOf(MusicObject startNote) {
 	    if (startNote == null) return null;
 
 	    for (Staff staff : staffList) {
@@ -371,4 +400,19 @@ public class Score implements Serializable, Iterable<Staff> {
 	public Iterator<Staff> iterator() {
 		return staffList.iterator();
 	}
+	
+	public void addListener(ScoreListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(ScoreListener listener) {
+        listeners.remove(listener);
+    }
+	
+    protected void fireChanged(ScoreEvent e) {
+        for (ScoreListener l : listeners) {
+            l.scoreChanged(e);
+        }
+    }
+
 }

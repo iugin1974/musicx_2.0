@@ -1,13 +1,16 @@
 package musicEvent;
 
+import musicInterface.MusicObject;
+
 /**
  * Una classe astratta che rappresenta un evento musicale, sia esso una nota,
  * una pausa o un accordo.
  */
-public abstract class MusicEvent {
+public abstract class MusicEvent extends MusicObject {
 	protected int duration;
 	protected int dots;
-
+	protected int voice = 1;
+	
 	public abstract MusicEvent getCopy();
 	
 	protected MusicEvent(int duration, int dots) {

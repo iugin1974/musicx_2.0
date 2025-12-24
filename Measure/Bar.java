@@ -2,7 +2,7 @@ package Measure;
 
 import musicInterface.MusicObject;
 
-public class Bar implements MusicObject {
+public class Bar extends MusicObject {
 
     public enum Type {
         NORMAL, DOUBLE, END, BEGIN_REPEAT, END_REPEAT

@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import musicInterface.MusicObject;
 
-public class TimeSignature implements Serializable, MusicObject  {
+public class TimeSignature extends MusicObject implements Serializable {
 
 	private int numerator = 4, denominator = 4;
 

@@ -20,7 +20,7 @@ import musicInterface.MusicObject;
  * @author eugenio
  * 
  */
-public class Note extends NoteEvent implements Comparable<Note>, Serializable, MusicObject {
+public class Note extends NoteEvent implements Comparable<Note>, Serializable {
 
 	public Note() {
 		

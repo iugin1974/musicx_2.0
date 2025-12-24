@@ -15,7 +15,7 @@ import notation.Tie;
  * @author eugenio
  *
  */
-public abstract class NoteEvent extends MusicEvent implements MusicObject {
+public abstract class NoteEvent extends MusicEvent {
 
 	protected int midiNumber = -1;
 	protected int alteration = 0;

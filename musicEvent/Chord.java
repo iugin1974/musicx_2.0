@@ -6,7 +6,7 @@ import java.util.Collections;
 
 import musicInterface.MusicObject;
 
-public class Chord extends NoteEvent implements Serializable, MusicObject  {
+public class Chord extends NoteEvent implements Serializable  {
 	private ArrayList<Note> notes = new ArrayList<Note>();
 
 	@Override

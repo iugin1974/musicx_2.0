@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import musicInterface.MusicObject;
 
-public class Clef implements MusicObject {
+public class Clef extends MusicObject {
 
     public enum Type {
         TREBLE,

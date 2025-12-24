@@ -8,41 +8,41 @@ import Measure.Partial;
 import Measure.TimeSignature;
 import musicInterface.MusicObject;
 
-public class Staff implements Iterable<Voice>{
+public class Staff implements Iterable<Voice> {
 
 	private List<Voice> voices;
 	private TimeSignature timeSignature;
 	private Partial partial;
 	
-	public Staff() {
+	protected Staff() {
 		voices = new ArrayList<>();
 		voices.add(new Voice(0));
 		voices.add(new Voice(1));
 	}
 	
-	public void addVoice() {
+	protected void addVoice() {
 		int i = voices.size();
 		voices.add(new Voice(i));
-		System.out.println("Voice added. Now " + voices.size() + "voices");
+		System.out.println("Voice added. Now " + voices.size() + " voices");
 	}
 
-	public Voice getVoice(int n) {
+	protected Voice getVoice(int n) {
 		return voices.get(n);
 	}
 	
-	public int getNumberOfVoices() {
+	protected int getNumberOfVoices() {
 		return voices.size();
 	}
 	
-	public List<MusicObject> getObjects(int voiceNumber) {
+	protected List<MusicObject> getObjects(int voiceNumber) {
 		return getVoice(voiceNumber).getObjects();
 	}
 	
-	public List<Voice> getVoices() {
+	protected List<Voice> getVoices() {
 		return voices;
 	}
 	
-	public List<Voice> getVoicesWithMusic() {
+	protected List<Voice> getVoicesWithMusic() {
 		List<Voice> voiceWithMusic = new ArrayList<>();
 		for (int i = 1; i < voices.size(); i++) {
 			if (!voices.get(i).isEmpty()) voiceWithMusic.add(voices.get(i));
@@ -50,7 +50,7 @@ public class Staff implements Iterable<Voice>{
 		return voiceWithMusic;
 	}
 	
-	public boolean removeObject(MusicObject obj) {
+	protected boolean removeObject(MusicObject obj) {
 		 if (obj == null) 
 		        return false;
 		 
@@ -61,7 +61,7 @@ public class Staff implements Iterable<Voice>{
 		return false;
 	}
 
-	public KeySignature getLastKeySignature() {
+	protected KeySignature getLastKeySignature() {
 		Voice v = voices.get(0);
 		for (int i = v.size() - 1; i >= 0; i--) {
 			if (v.get(i) instanceof KeySignature) {
@@ -71,7 +71,7 @@ public class Staff implements Iterable<Voice>{
 		return null;
 	}
 	
-	public Clef getLastClef() {
+	protected Clef getLastClef() {
 		Voice v = voices.get(0);
 		for (int i = v.size() - 1; i >= 0; i--) {
 			if (v.get(i) instanceof Clef) {
@@ -81,19 +81,19 @@ public class Staff implements Iterable<Voice>{
 		return null;
 	}
 	
-	public void clearVoice(int voiceNumber) {
+	protected void clearVoice(int voiceNumber) {
 		getVoice(voiceNumber).clear();
 	}
 
-	public TimeSignature getTimeSignature() {
+	protected TimeSignature getTimeSignature() {
 		return timeSignature;
 	}
 	
-	public void setTimeSignature(TimeSignature t) {
+	protected void setTimeSignature(TimeSignature t) {
 		timeSignature = t;
 	}
 
-	public void setPartial(Partial p) {
+	protected void setPartial(Partial p) {
 		partial = p;
 		
 	}

@@ -1,8 +1,9 @@
 package notation;
 
 import musicEvent.Modus;
+import musicInterface.MusicObject;
 
-public class KeySignature {
+public class KeySignature extends MusicObject {
 
 	private int numberOfAlterations;
 	private int typeOfAlterations;
