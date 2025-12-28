@@ -86,6 +86,7 @@ public abstract class NoteEvent extends MusicEvent {
 	}
 	
 	public Lyric getLyric(int stanza) {
+		if (lyrics == null) return null;
 		return lyrics.get(stanza);
 	}
 	

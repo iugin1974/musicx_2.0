@@ -23,7 +23,6 @@ public class Score implements Serializable, Iterable<Staff> {
 	private ArrayList<Staff> staffList;
 	private TimeSignature time;
 	private Partial partial;
-	private Lyrics lyrics;
 
 	public Score() {
 		staffList = new ArrayList<>();
@@ -65,14 +64,6 @@ public class Score implements Serializable, Iterable<Staff> {
 	 */
 	public TimeSignature getTimeSignature() {
 		return time;
-	}
-
-	public void addLyric(Lyric l) {
-		lyrics.addLyric(l);
-	}
-
-	public Lyrics getLyrics() {
-		return lyrics;
 	}
 
 	public int getStanzasNumber(int staffIndex, int voiceIndex) {
@@ -317,111 +308,88 @@ public class Score implements Serializable, Iterable<Staff> {
 	}
 
 	public void removeLyrics(int staffIndex, int voiceNumber, int stanza) {
-		Staff s = getStaff(staffIndex);
-		Voice v = s.getVoice(voiceNumber);
-		List<NoteEvent> notes = v.getNotes();
-
-		for (NoteEvent n : notes) {
-			n.removeLyric(stanza);
-		}
-
-		// rimuovere anche dal contenitore globale
-		if (lyrics != null) {
-			lyrics.removeLyrics(staffIndex, voiceNumber, stanza);
-		}
+	    Staff s = getStaff(staffIndex);
+	    Voice v = s.getVoice(voiceNumber);
+	    for (NoteEvent n : v.getNotes()) {
+	        n.removeLyric(stanza); // rimuove la lyric dalla nota
+	    }
 	}
 
 	public void addLyrics(List<String> syllables, int staffIndex, int voiceNumber, int stanza) {
-		Staff s = getStaff(staffIndex);
-		if (voiceNumber < 0 || voiceNumber >= s.getVoices().size()) {
-			JOptionPane.showMessageDialog(null, "Voce selezionata non valida.", "Errore Lyrics",
-					JOptionPane.WARNING_MESSAGE);
-			return;
-		}
+	    Staff s = getStaff(staffIndex);
+	    if (voiceNumber < 0 || voiceNumber >= s.getVoices().size()) {
+	        System.out.println("Voce selezionata non valida.");
+	        return;
+	    }
 
-		if (stanza < 0 || stanza >= 10) { // supponendo massimo 10 strofe
-			JOptionPane.showMessageDialog(null, "Stanza selezionata non valida.", "Errore Lyrics",
-					JOptionPane.WARNING_MESSAGE);
-			return;
-		}
+	    if (stanza < 0 || stanza >= 10) { // massimo 10 strofe
+	        System.out.println("Stanza selezionata non valida.");
+	        return;
+	    }
 
-		// --- RIMOZIONE VECCHIE LYRICS ---
-		if (lyrics == null) {
-			lyrics = new Lyrics(this);
-		} else {
-			removeLyrics(staffIndex, voiceNumber, stanza);
-		}
+	    // Rimuove eventuali vecchie lyrics della stanza
+	    removeLyrics(staffIndex, voiceNumber, stanza);
 
-		Voice v = s.getVoice(voiceNumber);
-		List<NoteEvent> notes = v.getNotes();
+	    Voice v = s.getVoice(voiceNumber);
+	    List<NoteEvent> notes = v.getNotes();
 
-		int syllableIndex = 0; // indice sillaba
-		int noteIndex = 0; // indice nota
-		boolean connected = false;
+	    int syllableIndex = 0;
+	    int noteIndex = 0;
+	    boolean connected = false;
 
-		while (syllableIndex < syllables.size() && noteIndex < notes.size()) {
-			NoteEvent note = notes.get(noteIndex);
-			String syllable = syllables.get(syllableIndex);
+	    while (syllableIndex < syllables.size() && noteIndex < notes.size()) {
+	        NoteEvent note = notes.get(noteIndex);
+	        String syllable = syllables.get(syllableIndex);
 
-			// --- SILLABE SPECIALI ---
-			if ("_".equals(syllable)) {
-				syllableIndex++;
-				noteIndex++;
-				continue;
-			}
-			if ("--".equals(syllable) || "__".equals(syllable)) {
-				syllableIndex++;
-				continue;
-			}
+	        // Sillabe speciali
+	        if ("_".equals(syllable)) {
+	            syllableIndex++;
+	            noteIndex++;
+	            continue;
+	        }
+	        if ("--".equals(syllable) || "__".equals(syllable)) {
+	            syllableIndex++;
+	            continue;
+	        }
 
-			// --- CONTROLLA CURVE ---
-			if (shouldAssignLyric(note, connected)) {
-				Syllable syl = new Syllable(syllable);
-				Lyric l = new Lyric(syl, note, staffIndex, voiceNumber, stanza);
-				lyrics.addLyric(l);
-				syllableIndex++;
+	        // Assegna lyric se applicabile
+	        if (shouldAssignLyric(note, connected)) {
+	            Syllable syl = new Syllable(syllable);
+	            new Lyric(syl, note, staffIndex, voiceNumber, stanza); // aggiunge automaticamente alla nota
+	            syllableIndex++;
 
-				if (note.isCurveStart())
-					connected = true;
-			} else {
-				// dentro curva → skip note
-				if (note.isCurveEnd())
-					connected = false;
-			}
+	            if (note.isCurveStart())
+	                connected = true;
+	        } else {
+	            if (note.isCurveEnd())
+	                connected = false;
+	        }
 
-			noteIndex++;
-		}
+	        noteIndex++;
+	    }
 	}
 
-	/**
-	 * Determina se una nota deve ricevere la lyric.
-	 * 
-	 * @param note      La nota corrente
-	 * @param connected Flag che indica se siamo dentro una curva
-	 * @return true se la nota deve ricevere lyric, false altrimenti
-	 */
 	private boolean shouldAssignLyric(NoteEvent note, boolean connected) {
-		if (!connected) {
-			// Nota singola o inizio curva → lyric sì
-			return true;
-		} else {
-			// Dentro curva → skip
-			return false;
-		}
+	    if (!connected) {
+	        return true; // nota singola o inizio curva
+	    } else {
+	        return false; // dentro curva → skip
+	    }
 	}
 
-	public List<String> getLyricsFor(int staff, int voice, int stanza) {
-		if (lyrics == null)
-			return null;
-		List<Lyric> l = lyrics.getLyrics(staff, voice, stanza);
-		List<String> list = new ArrayList<>();
-
-		// Scorre tutte le note del sistema
-		for (Lyric lyric : l) {
-			list.add(lyric.getSyllable().getText());
-		}
-		return list;
+	public List<String> getLyricsFor(int staffIndex, int voiceNumber, int stanza) {
+	    Staff s = getStaff(staffIndex);
+	    Voice v = s.getVoice(voiceNumber);
+	    List<String> result = new ArrayList<>();
+	    for (NoteEvent n : v.getNotes()) {
+	        Lyric l = n.getLyric(stanza);
+	        if (l != null) {
+	            result.add(l.getSyllable().getText());
+	        }
+	    }
+	    return result;
 	}
+
 
 	@Override
 	public Iterator<Staff> iterator() {
