@@ -14,10 +14,6 @@ public class Voice implements Iterable<MusicObject> {
     private final int voiceNumber;
     private final List<MusicObject> objects;
 
-    private static final Comparator<MusicObject> BY_TICK =
-            Comparator.comparingInt(MusicObject::getTick);
-
-    
     protected Voice(int voiceNumber) {
         this.voiceNumber = voiceNumber;
         this.objects = new ArrayList<>();
@@ -33,7 +29,7 @@ public class Voice implements Iterable<MusicObject> {
         if (o == null) return;
 
         objects.add(o);
-        objects.sort(BY_TICK);
+        objects.sort(new CompareTick());
     }
 
     /** Rimuove un oggetto dal layer */
@@ -80,7 +76,7 @@ public class Voice implements Iterable<MusicObject> {
 	
 	protected void changeTick(MusicObject o, int t) {
 		o.setTick(t);
-		objects.sort(BY_TICK);
+		objects.sort(new CompareTick());
 	}
 	
 	
