@@ -43,32 +43,47 @@ public class Clef extends MusicObject {
 
     // --- equals / hashCode ---
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
+    public boolean musicallyEquals(MusicObject obj) {
         if (!(obj instanceof Clef)) return false;
-        Clef other = (Clef) obj;
-        return type == other.type &&
-               midiOffset == other.midiOffset &&
-               Arrays.equals(semitoneMap, other.semitoneMap);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = type.hashCode();
-        result = 31 * result + midiOffset;
-        result = 31 * result + Arrays.hashCode(semitoneMap);
-        return result;
+        return this.type == ((Clef) obj).type;
     }
 
     // --- istanze pronte all'uso ---
-    public static final Clef TREBLE = new Clef(Type.TREBLE, 64, SemitoneMap.SEMITONE_MAP_TREBLE);
-    public static final Clef TREBLE_8 = new Clef(Type.TREBLE_8, 52, SemitoneMap.SEMITONE_MAP_TREBLE_8);
-    public static final Clef BASS = new Clef(Type.BASS, 43, SemitoneMap.SEMITONE_MAP_BASS);
-    public static final Clef ALTO = new Clef(Type.ALTO, 57, SemitoneMap.SEMITONE_MAP_ALTO);       // esempio
-    public static final Clef TENOR = new Clef(Type.TENOR, 50, SemitoneMap.SEMITONE_MAP_TENOR);    // esempio
-    public static final Clef SOPRANO = new Clef(Type.SOPRANO, 66, SemitoneMap.SEMITONE_MAP_SOPRANO); // esempio
-    public static final Clef MEZZO_SOPRANO = new Clef(Type.MEZZO_SOPRANO, 62, SemitoneMap.SEMITONE_MAP_MEZZO_SOPRANO); // esempio
-    public static final Clef BARITONE = new Clef(Type.BARITONE, 46, SemitoneMap.SEMITONE_MAP_BARITONE); // esempio
-    public static final Clef PERCUSSION = new Clef(Type.PERCUSSION, -1, new int[0]); // non ha note
+    public static Clef treble() {
+        return new Clef(Type.TREBLE, 64, SemitoneMap.SEMITONE_MAP_TREBLE);
+    }
+
+    public static Clef treble8() {
+        return new Clef(Type.TREBLE_8, 52, SemitoneMap.SEMITONE_MAP_TREBLE_8);
+    }
+
+    public static Clef bass() {
+        return new Clef(Type.BASS, 43, SemitoneMap.SEMITONE_MAP_BASS);
+    }
+
+    public static Clef alto() {
+        return new Clef(Type.ALTO, 57, SemitoneMap.SEMITONE_MAP_ALTO);
+    }
+
+    public static Clef tenor() {
+        return new Clef(Type.TENOR, 50, SemitoneMap.SEMITONE_MAP_TENOR);
+    }
+
+    public static Clef soprano() {
+        return new Clef(Type.SOPRANO, 66, SemitoneMap.SEMITONE_MAP_SOPRANO);
+    }
+
+    public static Clef mezzoSoprano() {
+        return new Clef(Type.MEZZO_SOPRANO, 62, SemitoneMap.SEMITONE_MAP_MEZZO_SOPRANO);
+    }
+
+    public static Clef baritone() {
+        return new Clef(Type.BARITONE, 46, SemitoneMap.SEMITONE_MAP_BARITONE);
+    }
+
+    public static Clef percussion() {
+        return new Clef(Type.PERCUSSION, -1, new int[0]);
+    }
+
 
 }

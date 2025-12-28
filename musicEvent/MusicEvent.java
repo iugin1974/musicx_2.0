@@ -9,7 +9,6 @@ import musicInterface.MusicObject;
 public abstract class MusicEvent extends MusicObject {
 	protected int duration;
 	protected int dots;
-	protected int voice = 1;
 	
 	public abstract MusicEvent getCopy();
 	

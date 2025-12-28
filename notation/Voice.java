@@ -1,6 +1,7 @@
 package notation;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -13,6 +14,10 @@ public class Voice implements Iterable<MusicObject> {
     private final int voiceNumber;
     private final List<MusicObject> objects;
 
+    private static final Comparator<MusicObject> BY_TICK =
+            Comparator.comparingInt(MusicObject::getTick);
+
+    
     protected Voice(int voiceNumber) {
         this.voiceNumber = voiceNumber;
         this.objects = new ArrayList<>();
@@ -25,9 +30,10 @@ public class Voice implements Iterable<MusicObject> {
 
     /** Aggiunge un oggetto al layer */
     protected void addObject(MusicObject o) {
-        if (o != null) {
-            objects.add(o);
-        }
+        if (o == null) return;
+
+        objects.add(o);
+        objects.sort(BY_TICK);
     }
 
     /** Rimuove un oggetto dal layer */
@@ -42,12 +48,12 @@ public class Voice implements Iterable<MusicObject> {
     
     /** Restituisce solo le note **/
     protected List<NoteEvent> getNotes() {
-    	List<NoteEvent> notes = new ArrayList<>();
-    	for (MusicObject object : objects) {
-    		if (object instanceof NoteEvent)
-    			notes.add((Note)object);
-    	}
-    	return notes;
+        List<NoteEvent> notes = new ArrayList<>();
+        for (MusicObject object : objects) {
+            if (object instanceof NoteEvent)
+                notes.add((NoteEvent) object);
+        }
+        return notes;
     }
     
     protected MusicObject get(int i) {
@@ -71,4 +77,11 @@ public class Voice implements Iterable<MusicObject> {
 	public Iterator<MusicObject> iterator() {
 		return objects.iterator();
 	}
+	
+	protected void changeTick(MusicObject o, int t) {
+		o.setTick(t);
+		objects.sort(BY_TICK);
+	}
+	
+	
 }

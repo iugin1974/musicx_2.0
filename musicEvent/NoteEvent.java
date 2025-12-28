@@ -26,6 +26,7 @@ public abstract class NoteEvent extends MusicEvent {
 	private boolean tieEnd = false;
 	private Slur slur;
 	private Tie tie;
+	private int staffPosition;
 
 
 	protected NoteEvent() {
@@ -94,7 +95,7 @@ public abstract class NoteEvent extends MusicEvent {
 	}
 	
 	public boolean hasLyric() {
-		return lyrics != null;
+	    return lyrics != null && !lyrics.isEmpty();
 	}
 
 	public void removeLyric() {
@@ -174,6 +175,14 @@ public abstract class NoteEvent extends MusicEvent {
 
 	public boolean isCurveEnd() {
 		return isTiedEnd() || isSlurEnd();
+	}
+	
+	public void setStaffPosition(int p) {
+		staffPosition = p;
+	}
+	
+	public int getStaffPosition() {
+		return staffPosition;
 	}
 
 }

@@ -38,8 +38,8 @@ public class Score implements Serializable, Iterable<Staff> {
 	public void addStaff() {
 		Staff s = new Staff();
 		staffList.add(s);
-		ScoreEvent e = new ScoreEvent(ScoreEvent.Type.STAFF_ADDED, s, staffList.size() - 1, -1);
-		fireChanged(e);
+		ScoreEvent e = new ScoreEvent(ScoreEvent.Type.STAFF_ADDED, s, staffList.size() - 1);
+		fireScoreEvent(e);
 	}
 
 	public void setTimeSignature(TimeSignature time) {
@@ -68,47 +68,50 @@ public class Score implements Serializable, Iterable<Staff> {
 	}
 
 	public void addLyric(Lyric l) {
-        lyrics.addLyric(l);
-    }
-	
-    public Lyrics getLyrics() {
-        return lyrics;
-    }
-    
-    public int getStanzasNumber(int staffIndex, int voiceIndex) {
-    	Voice v = getStaff(staffIndex).getVoice(voiceIndex);
-    	int s = 0;
-    	for (NoteEvent g : v.getNotes()) {
-    		if (g.getNumberOfStanzas() > s) {
-    			s = g.getNumberOfStanzas();
-    		}
-    	}
-    	return s;
-    }
-    
+		lyrics.addLyric(l);
+	}
+
+	public Lyrics getLyrics() {
+		return lyrics;
+	}
+
+	public int getStanzasNumber(int staffIndex, int voiceIndex) {
+		Voice v = getStaff(staffIndex).getVoice(voiceIndex);
+		int s = 0;
+		for (NoteEvent g : v.getNotes()) {
+			if (g.getNumberOfStanzas() > s) {
+				s = g.getNumberOfStanzas();
+			}
+		}
+		return s;
+	}
+
 	/** Aggiunge un oggetto allo staff e alla voce indicata */
 	public void addObject(MusicObject obj, int staffIndex, int voiceIndex) {
 		// se non ci sono abbastanza voci per lo staff, vengono create
 		Staff s = staffList.get(staffIndex);
 		int v = s.getNumberOfVoices();
 		for (int i = v; i <= voiceIndex; i++) {
-		    s.addVoice();
+			s.addVoice();
 		}
-		if (obj instanceof MusicEvent) obj.setVoice(voiceIndex);
-		else obj.setVoice(0);
+		if (obj instanceof MusicEvent)
+			obj.setVoiceIndex(voiceIndex);
+		else
+			obj.setVoiceIndex(0);
+		obj.setStaff(staffIndex);
 		s.getVoice(voiceIndex).addObject(obj);
 		ScoreEvent e = null;
 		if (obj instanceof Note) {
-			e = new ScoreEvent(ScoreEvent.Type.NOTE_ADDED, (Note)obj, staffIndex, voiceIndex);
+			e = new ScoreEvent(ScoreEvent.Type.NOTE_ADDED, (Note) obj, staffIndex, voiceIndex);
 		} else if (obj instanceof Rest) {
-			e = new ScoreEvent(ScoreEvent.Type.REST_ADDED, (Rest)obj, staffIndex, voiceIndex);
+			e = new ScoreEvent(ScoreEvent.Type.REST_ADDED, (Rest) obj, staffIndex, voiceIndex);
 		} else if (obj instanceof Bar) {
-			e = new ScoreEvent(ScoreEvent.Type.BARLINE_ADDED, (Bar)obj, staffIndex, 0);
-		} else if (obj instanceof Rest) {
-			e = new ScoreEvent(ScoreEvent.Type.CLEF_ADDED, (Clef)obj, staffIndex, 0);
+			e = new ScoreEvent(ScoreEvent.Type.BARLINE_ADDED, (Bar) obj, staffIndex, 0);
+		} else if (obj instanceof Clef) {
+			e = new ScoreEvent(ScoreEvent.Type.CLEF_ADDED, (Clef) obj, staffIndex, 0);
 		}
-		 
-		fireChanged(e);
+
+		fireScoreEvent(e);
 	}
 
 	/** Restituisce la lista degli oggetti di uno staff e voce specifici */
@@ -118,71 +121,80 @@ public class Score implements Serializable, Iterable<Staff> {
 		}
 		return staffList.get(staffNumber).getVoice(voiceNumber).getObjects();
 	}
-	
+
 	/** Restituisce la lista degli oggetti di uno staff e voce specifici */
 	public List<MusicObject> getObjects(Staff staff, int voiceNumber) {
 		return staff.getVoice(voiceNumber).getObjects();
 	}
 
 	/**
-	 * Restituisce tutti gli oggetti di uno staff, di tutti i layer.
-	 * Restituisce una lista vuota se lo staffNumber non è valido.
+	 * Restituisce tutti gli oggetti di uno staff, di tutti i layer. Restituisce una
+	 * lista vuota se lo staffNumber non è valido.
 	 */
 	public List<MusicObject> getObjects(int staffNumber) {
-	    if (staffNumber < 0 || staffNumber >= staffList.size()) {
-	        return List.of(); // lista immutabile vuota
-	    }
+		if (staffNumber < 0 || staffNumber >= staffList.size()) {
+			return List.of(); // lista immutabile vuota
+		}
 
-	    Staff staff = staffList.get(staffNumber);
-	    List<MusicObject> all = new ArrayList<>();
+		Staff staff = staffList.get(staffNumber);
+		List<MusicObject> all = new ArrayList<>();
 
-	    for (Voice layer : staff.getVoices()) {
-	        all.addAll(layer.getObjects());
-	    }
+		for (Voice layer : staff.getVoices()) {
+			all.addAll(layer.getObjects());
+		}
 
-	    return all;
+		return all;
 	}
-	
+
 	public List<MusicObject> getStaffWideObjects(int staffNumber) {
 		Staff staff = getStaff(staffNumber);
 		return staff.getObjects(0);
 	}
-	
+
 	public List<MusicObject> getStaffWideObjects(Staff staff) {
 		return staff.getObjects(0);
 	}
 
+	public int getNumberOfVoices(Staff s) {
+		return s.getNumberOfVoices();
+	}
+
+	public int getNumberOfVoices(int staffIndex) {
+		Staff s = getStaff(staffIndex);
+		return s.getNumberOfVoices();
+	}
+
 	/**
-	 * Restituisce tutte le note di uno staff specifico e di una voce specifica.
-	 * Per il layer STAFF_WIDE ritorna una lista vuota.
+	 * Restituisce tutte le note di uno staff specifico e di una voce specifica. Per
+	 * il layer STAFF_WIDE ritorna una lista vuota.
 	 */
 	public List<NoteEvent> getNotes(int staffNumber, int voiceNumber) {
-	    
-	    // controlli di sicurezza
-	    if (staffNumber < 0 || staffNumber >= staffList.size())
-	        return List.of(); // lista vuota immutabile
 
-	    Staff staff = staffList.get(staffNumber);
+		// controlli di sicurezza
+		if (staffNumber < 0 || staffNumber >= staffList.size())
+			return List.of(); // lista vuota immutabile
 
-	    Voice layer = staff.getVoice(voiceNumber);
-	    if (layer == null)
-	        return List.of();
+		Staff staff = staffList.get(staffNumber);
 
-	    // STAFF_WIDE non contiene note → ritorna lista vuota
-	    if (layer.getVoiceType() == 0)
-	        return List.of();
+		Voice layer = staff.getVoice(voiceNumber);
+		if (layer == null)
+			return List.of();
 
-	    List<NoteEvent> notes = new ArrayList<>();
-	    
-	    for (MusicObject o : layer.getObjects()) {
-	        if (o instanceof NoteEvent note) {
-	            notes.add(note);
-	        }
-	    }
-	    
-	    return notes;
+		// STAFF_WIDE non contiene note → ritorna lista vuota
+		if (layer.getVoiceType() == 0)
+			return List.of();
+
+		List<NoteEvent> notes = new ArrayList<>();
+
+		for (MusicObject o : layer.getObjects()) {
+			if (o instanceof NoteEvent note) {
+				notes.add(note);
+			}
+		}
+
+		return notes;
 	}
-	
+
 	/** Restituisce lo staffList completo */
 	public List<Staff> getAllStaves() {
 		return staffList;
@@ -190,28 +202,38 @@ public class Score implements Serializable, Iterable<Staff> {
 
 	/** restituisce una lista con tutti gli oggetti di tutti gli staves */
 	public List<MusicObject> getAllObjects() {
-	    List<MusicObject> all = new ArrayList<>();
-	    for (Staff staff : staffList) {
-	        for (Voice v : staff.getVoices()) {
-	            all.addAll(v.getObjects());
-	        }
-	    }
-	    return all;
+		List<MusicObject> all = new ArrayList<>();
+		for (Staff staff : staffList) {
+			for (Voice v : staff.getVoices()) {
+				all.addAll(v.getObjects());
+			}
+		}
+		return all;
 	}
-	
-	/** Rimuove un oggetto dalla score */
+
+	/**
+	 * Rimuove un oggetto dalla score. Se l'azione ha avuto successo viene lanciato
+	 * uno ScoreEvent e ritorna true.
+	 * 
+	 * @param obj
+	 * @return
+	 */
 	public boolean removeObject(MusicObject obj) {
-	    if (obj == null) 
-	        return false;
+		if (obj == null)
+			return false;
 
-	    for (Staff staff : staffList) {
-	        if (staff.removeObject(obj)) {
-	            return true; // trovato e rimosso
-	        }
-	    }
-	    return false; // non trovato in nessuno staff
+		for (int s = 0; s < staffList.size(); s++) {
+			Staff staff = staffList.get(s);
+			int voiceIndex = staff.removeObject(obj);
+
+			if (voiceIndex != -1) {
+				ScoreEvent ev = new ScoreEvent(ScoreEvent.Type.OBJECT_REMOVED, obj, s, voiceIndex);
+				fireScoreEvent(ev); // o come gestisci gli eventi
+				return true;
+			}
+		}
+		return false;
 	}
-
 
 	/** Rimuove tutti gli oggetti da uno staff */
 	public void clearVoice(int staffNumber, int voiceNumber) {
@@ -224,67 +246,74 @@ public class Score implements Serializable, Iterable<Staff> {
 	public int getStaffCount() {
 		return staffList.size();
 	}
-	
-	/** Restituisce la nota successiva nella stessa voce dello stesso staff,
-	 * oppure null se è l'ultima.
+
+	/**
+	 * Restituisce la nota successiva nella stessa voce dello stesso staff, oppure
+	 * null se è l'ultima.
 	 */
 	public NoteEvent getNextNote(NoteEvent note) {
-	    if (note == null) return null;
+		if (note == null)
+			return null;
 
-	    Voice layer = getVoiceOf(note);
-	    if (layer == null) return null;
-	    
-	    List<MusicObject> objs = layer.getObjects();
-	    int index = objs.indexOf(note);
+		Voice layer = getVoiceOf(note);
+		if (layer == null)
+			return null;
 
-	    for (int i = index + 1; i < objs.size(); i++) {
-	        if (objs.get(i) instanceof NoteEvent next)
-	            return next;
-	    }
+		List<MusicObject> objs = layer.getObjects();
+		int index = objs.indexOf(note);
 
-	    return null;
+		for (int i = index + 1; i < objs.size(); i++) {
+			if (objs.get(i) instanceof NoteEvent next)
+				return next;
+		}
+
+		return null;
 	}
 
-	/** Restituisce la nota precedente nella stessa voce dello stesso staff,
-	 * oppure null se è la prima.
+	/**
+	 * Restituisce la nota precedente nella stessa voce dello stesso staff, oppure
+	 * null se è la prima.
 	 */
 	public NoteEvent getPrevNote(NoteEvent note) {
-	    if (note == null) return null;
+		if (note == null)
+			return null;
 
-	    Voice layer = getVoiceOf(note);
-	    if (layer == null) return null;
-	    
-	    List<MusicObject> objs = layer.getObjects();
-	    int index = objs.indexOf(note);
+		Voice layer = getVoiceOf(note);
+		if (layer == null)
+			return null;
 
-	    for (int i = index - 1; i >= 0; i--) {
-	        if (objs.get(i) instanceof NoteEvent prev)
-	            return prev;
-	    }
+		List<MusicObject> objs = layer.getObjects();
+		int index = objs.indexOf(note);
 
-	    return null;
+		for (int i = index - 1; i >= 0; i--) {
+			if (objs.get(i) instanceof NoteEvent prev)
+				return prev;
+		}
+
+		return null;
 	}
 
 	/** Controlla se n1 e n2 sono consecutive **/
 	public boolean areNotesConsecutive(NoteEvent n1, NoteEvent n2) {
-	    return getNextNote(n1) == n2;
+		return getNextNote(n1) == n2;
 	}
 
 	/** Restituisce la VoiceLayer che contiene la nota, oppure null. */
 	public Voice getVoiceOf(MusicObject startNote) {
-	    if (startNote == null) return null;
+		if (startNote == null)
+			return null;
 
-	    for (Staff staff : staffList) {
-	        for (Voice layer : staff.getVoices()) {
-	            if (layer.getVoiceType() == 0)
-	                continue;
+		for (Staff staff : staffList) {
+			for (Voice layer : staff.getVoices()) {
+				if (layer.getVoiceType() == 0)
+					continue;
 
-	            if (layer.getObjects().contains(startNote)) {
-	                return layer;
-	            }
-	        }
-	    }
-	    return null;
+				if (layer.getObjects().contains(startNote)) {
+					return layer;
+				}
+			}
+		}
+		return null;
 	}
 
 	public void removeLyrics(int staffIndex, int voiceNumber, int stanza) {
@@ -301,7 +330,7 @@ public class Score implements Serializable, Iterable<Staff> {
 			lyrics.removeLyrics(staffIndex, voiceNumber, stanza);
 		}
 	}
-	
+
 	public void addLyrics(List<String> syllables, int staffIndex, int voiceNumber, int stanza) {
 		Staff s = getStaff(staffIndex);
 		if (voiceNumber < 0 || voiceNumber >= s.getVoices().size()) {
@@ -316,11 +345,9 @@ public class Score implements Serializable, Iterable<Staff> {
 			return;
 		}
 
-		
-
 		// --- RIMOZIONE VECCHIE LYRICS ---
 		if (lyrics == null) {
-			lyrics = new Lyrics();
+			lyrics = new Lyrics(this);
 		} else {
 			removeLyrics(staffIndex, voiceNumber, stanza);
 		}
@@ -365,7 +392,7 @@ public class Score implements Serializable, Iterable<Staff> {
 			noteIndex++;
 		}
 	}
-	
+
 	/**
 	 * Determina se una nota deve ricevere la lyric.
 	 * 
@@ -382,7 +409,7 @@ public class Score implements Serializable, Iterable<Staff> {
 			return false;
 		}
 	}
-	
+
 	public List<String> getLyricsFor(int staff, int voice, int stanza) {
 		if (lyrics == null)
 			return null;
@@ -400,19 +427,54 @@ public class Score implements Serializable, Iterable<Staff> {
 	public Iterator<Staff> iterator() {
 		return staffList.iterator();
 	}
-	
+
 	public void addListener(ScoreListener listener) {
-        listeners.add(listener);
-    }
+		listeners.add(listener);
+	}
 
-    public void removeListener(ScoreListener listener) {
-        listeners.remove(listener);
-    }
-	
-    protected void fireChanged(ScoreEvent e) {
-        for (ScoreListener l : listeners) {
-            l.scoreChanged(e);
-        }
-    }
+	public void removeListener(ScoreListener listener) {
+		listeners.remove(listener);
+	}
 
+	protected void fireScoreEvent(ScoreEvent e) {
+		for (ScoreListener l : listeners) {
+			l.scoreChanged(e);
+		}
+	}
+
+	public void tie(List<NoteEvent> notes) {
+		if (notes == null || notes.size() < 2)
+			return;
+
+		notes.get(0).tieStart();
+
+		for (int i = 1; i < notes.size() - 1; i++) {
+			NoteEvent n = notes.get(i);
+			n.tieEnd();
+			n.tieStart();
+		}
+
+		notes.get(notes.size() - 1).tieEnd();
+	}
+
+	public void slur(List<NoteEvent> notes) {
+		if (notes == null || notes.size() < 2)
+			return;
+
+		notes.get(0).slurStart();
+
+		for (int i = 1; i < notes.size() - 1; i++) {
+			NoteEvent n = notes.get(i);
+			n.slurEnd();
+			n.slurStart();
+		}
+
+		notes.get(notes.size() - 1).slurEnd();
+	}
+
+	public void changeTick(MusicObject o, int newTick) {
+		int staffIndex = o.getStaffIndex();
+		int voiceIndex = o.getVoiceIndex();
+		getStaff(staffIndex).getVoice(voiceIndex).changeTick(o, newTick);
+	}
 }

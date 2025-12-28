@@ -50,16 +50,17 @@ public class Staff implements Iterable<Voice> {
 		return voiceWithMusic;
 	}
 	
-	protected boolean removeObject(MusicObject obj) {
-		 if (obj == null) 
-		        return false;
-		 
-		for (Voice v : voices) {
-			if (v.removeObject(obj))
-				return true;
-		}
-		return false;
+	protected int removeObject(MusicObject obj) {
+	    if (obj == null) return -1;
+
+	    for (int v = 0; v < voices.size(); v++) {
+	        if (voices.get(v).removeObject(obj)) {
+	            return v; // indice della voice
+	        }
+	    }
+	    return -1;
 	}
+
 
 	protected KeySignature getLastKeySignature() {
 		Voice v = voices.get(0);

@@ -3,19 +3,27 @@ package notation;
 import java.util.ArrayList;
 import java.util.List;
 
+import musicEvent.Note;
+import musicEvent.NoteEvent;
+
 
 public class Lyrics {
 	private List<Lyric> lyrics = new ArrayList<>();
-
-	public void addLyric(Lyric l) {
+	private Score score;
+	
+	protected Lyrics(Score score) {
+		this.score = score;
+	}
+	
+	protected void addLyric(Lyric l) {
 		lyrics.add(l);
 	}
 
-	public List<Lyric> getLyrics() {
+	protected List<Lyric> getLyrics() {
 		return lyrics;
 	}
 	
-	public void removeLyrics(int staff, int voice, int stanza) {
+	protected void removeLyrics(int staff, int voice, int stanza) {
 		for (int i = lyrics.size() - 1; i >= 0; i--) {
 			Lyric l = lyrics.get(i);
 			if (l.getStaff() == staff && l.getVoice() == voice && l.getStanza() == stanza) {
@@ -25,7 +33,7 @@ public class Lyrics {
 		}
 	}
 
-	public List<Lyric> getLyrics(int staff, int voice, int stanza) {
+	protected List<Lyric> getLyrics(int staff, int voice, int stanza) {
 		List<Lyric> result = new ArrayList<>();
 		for (Lyric l : lyrics) {
 			if (l.getStaff() == staff && l.getVoice() == voice && l.getStanza() == stanza) {
@@ -33,5 +41,17 @@ public class Lyrics {
 			}
 		}
 		return result;
+	}
+	
+	protected void reorganizeLyrics(int staffIndex, int voiceIndex, int stanza) {
+		Staff s = score.getStaff(staffIndex);
+		Voice v = s.getVoice(voiceIndex);
+		List<NoteEvent> notes = v.getNotes();
+		List<Lyric> newLyrics = new ArrayList<>();
+		for (NoteEvent ne : notes) {
+			newLyrics.add(ne.getLyric(stanza));
+		}
+		removeLyrics(staffIndex, voiceIndex, stanza);
+		
 	}
 }
