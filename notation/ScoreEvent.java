@@ -1,5 +1,9 @@
 package notation;
 
+import java.util.List;
+
+import musicEvent.MusicEvent;
+import musicEvent.NoteEvent;
 import musicInterface.MusicObject;
 
 public class ScoreEvent {
@@ -7,37 +11,13 @@ public class ScoreEvent {
     public enum Type {
         OBJECT_ADDED,
         OBJECT_REMOVED,
-
-        NOTE_ADDED,
-        NOTE_REMOVED,
-
-        REST_ADDED,
-        REST_REMOVED,
-
+        OBJECT_CHANGED,
+        
         STAFF_ADDED,
         STAFF_REMOVED,
 
         VOICE_ADDED,
-        VOICE_REMOVED,
-
-        LYRIC_ADDED,
-        LYRIC_REMOVED,
-
-        BARLINE_ADDED,
-        BARLINE_CHANGED,
-        BARLINE_REMOVED,
-
-        CLEF_ADDED,
-        CLEF_REMOVED,
-        CLEF_CHANGED,
-
-        TIME_SIGNATURE_ADDED,
-        TIME_SIGNATURE_REMOVED,
-        TIME_SIGNATURE_CHANGED,
-
-        KEY_SIGNATURE_ADDED,
-        KEY_SIGNATURE_REMOVED,
-        KEY_SIGNATURE_CHANGED
+        VOICE_REMOVED
     }
 
     private final Type type;
@@ -52,7 +32,15 @@ public class ScoreEvent {
     /* =======================
      * COSTRUTTORI
      * ======================= */
+    public ScoreEvent(Type type) {
+    	 this.type = type;
+         this.staff = null;
+         this.staffIndex = -1;
 
+         this.musicObject = null;
+         this.voiceIndex = -1;
+    }
+    
     /** Eventi che riguardano uno STAFF */
     public ScoreEvent(Type type, Staff staff, int staffIndex) {
         this.type = type;
@@ -73,6 +61,7 @@ public class ScoreEvent {
 
         this.staff = null;
     }
+
 
     /* =======================
      * GETTERS

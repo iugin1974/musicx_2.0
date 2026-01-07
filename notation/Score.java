@@ -79,31 +79,22 @@ public class Score implements Serializable, Iterable<Staff> {
 
 	/** Aggiunge un oggetto allo staff e alla voce indicata */
 	public void addObject(MusicObject obj, int staffIndex, int voiceIndex) {
-		// se non ci sono abbastanza voci per lo staff, vengono create
-		Staff s = staffList.get(staffIndex);
-		int v = s.getNumberOfVoices();
-		for (int i = v; i <= voiceIndex; i++) {
-			s.addVoice();
-		}
-		if (obj instanceof MusicEvent)
-			obj.setVoiceIndex(voiceIndex);
-		else
-			obj.setVoiceIndex(0);
-		obj.setStaff(staffIndex);
-		s.getVoice(voiceIndex).addObject(obj);
-		ScoreEvent e = null;
-		if (obj instanceof Note) {
-			e = new ScoreEvent(ScoreEvent.Type.NOTE_ADDED, (Note) obj, staffIndex, voiceIndex);
-		} else if (obj instanceof Rest) {
-			e = new ScoreEvent(ScoreEvent.Type.REST_ADDED, (Rest) obj, staffIndex, voiceIndex);
-		} else if (obj instanceof Bar) {
-			e = new ScoreEvent(ScoreEvent.Type.BARLINE_ADDED, (Bar) obj, staffIndex, 0);
-		} else if (obj instanceof Clef) {
-			e = new ScoreEvent(ScoreEvent.Type.CLEF_ADDED, (Clef) obj, staffIndex, 0);
-		}
+	    Staff s = staffList.get(staffIndex);
 
-		fireScoreEvent(e);
+	    // se non ci sono abbastanza voci per lo staff, vengono create
+	    int v = s.getNumberOfVoices();
+	    for (int i = v; i <= voiceIndex; i++) {
+	        s.addVoice();
+	    }
+
+	    obj.setStaff(staffIndex);
+	    obj.setVoiceIndex(voiceIndex);
+	    s.getVoice(voiceIndex).addObject(obj);
+
+	    ScoreEvent e = new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED, obj, staffIndex, voiceIndex);
+	    fireScoreEvent(e);
 	}
+
 
 	/** Restituisce la lista degli oggetti di uno staff e voce specifici */
 	public List<MusicObject> getObjects(int staffNumber, int voiceNumber) {
@@ -308,88 +299,87 @@ public class Score implements Serializable, Iterable<Staff> {
 	}
 
 	public void removeLyrics(int staffIndex, int voiceNumber, int stanza) {
-	    Staff s = getStaff(staffIndex);
-	    Voice v = s.getVoice(voiceNumber);
-	    for (NoteEvent n : v.getNotes()) {
-	        n.removeLyric(stanza); // rimuove la lyric dalla nota
-	    }
+		Staff s = getStaff(staffIndex);
+		Voice v = s.getVoice(voiceNumber);
+		for (NoteEvent n : v.getNotes()) {
+			n.removeLyric(stanza); // rimuove la lyric dalla nota
+		}
 	}
 
 	public void addLyrics(List<String> syllables, int staffIndex, int voiceNumber, int stanza) {
-	    Staff s = getStaff(staffIndex);
-	    if (voiceNumber < 0 || voiceNumber >= s.getVoices().size()) {
-	        System.out.println("Voce selezionata non valida.");
-	        return;
-	    }
+		Staff s = getStaff(staffIndex);
+		if (voiceNumber < 0 || voiceNumber >= s.getVoices().size()) {
+			System.out.println("Voce selezionata non valida.");
+			return;
+		}
 
-	    if (stanza < 0 || stanza >= 10) { // massimo 10 strofe
-	        System.out.println("Stanza selezionata non valida.");
-	        return;
-	    }
+		if (stanza < 0 || stanza >= 10) { // massimo 10 strofe
+			System.out.println("Stanza selezionata non valida.");
+			return;
+		}
 
-	    // Rimuove eventuali vecchie lyrics della stanza
-	    removeLyrics(staffIndex, voiceNumber, stanza);
+		// Rimuove eventuali vecchie lyrics della stanza
+		removeLyrics(staffIndex, voiceNumber, stanza);
 
-	    Voice v = s.getVoice(voiceNumber);
-	    List<NoteEvent> notes = v.getNotes();
+		Voice v = s.getVoice(voiceNumber);
+		List<NoteEvent> notes = v.getNotes();
 
-	    int syllableIndex = 0;
-	    int noteIndex = 0;
-	    boolean connected = false;
+		int syllableIndex = 0;
+		int noteIndex = 0;
+		boolean connected = false;
 
-	    while (syllableIndex < syllables.size() && noteIndex < notes.size()) {
-	        NoteEvent note = notes.get(noteIndex);
-	        String syllable = syllables.get(syllableIndex);
+		while (syllableIndex < syllables.size() && noteIndex < notes.size()) {
+			NoteEvent note = notes.get(noteIndex);
+			String syllable = syllables.get(syllableIndex);
 
-	        // Sillabe speciali
-	        if ("_".equals(syllable)) {
-	            syllableIndex++;
-	            noteIndex++;
-	            continue;
-	        }
-	        if ("--".equals(syllable) || "__".equals(syllable)) {
-	            syllableIndex++;
-	            continue;
-	        }
+			// Sillabe speciali
+			if ("_".equals(syllable)) {
+				syllableIndex++;
+				noteIndex++;
+				continue;
+			}
+			if ("--".equals(syllable) || "__".equals(syllable)) {
+				syllableIndex++;
+				continue;
+			}
 
-	        // Assegna lyric se applicabile
-	        if (shouldAssignLyric(note, connected)) {
-	            Syllable syl = new Syllable(syllable);
-	            new Lyric(syl, note, staffIndex, voiceNumber, stanza); // aggiunge automaticamente alla nota
-	            syllableIndex++;
+			// Assegna lyric se applicabile
+			if (shouldAssignLyric(note, connected)) {
+				Syllable syl = new Syllable(syllable);
+				new Lyric(syl, note, staffIndex, voiceNumber, stanza); // aggiunge automaticamente alla nota
+				syllableIndex++;
 
-	            if (note.isCurveStart())
-	                connected = true;
-	        } else {
-	            if (note.isCurveEnd())
-	                connected = false;
-	        }
+				if (note.isCurveStart())
+					connected = true;
+			} else {
+				if (note.isCurveEnd())
+					connected = false;
+			}
 
-	        noteIndex++;
-	    }
+			noteIndex++;
+		}
 	}
 
 	private boolean shouldAssignLyric(NoteEvent note, boolean connected) {
-	    if (!connected) {
-	        return true; // nota singola o inizio curva
-	    } else {
-	        return false; // dentro curva → skip
-	    }
+		if (!connected) {
+			return true; // nota singola o inizio curva
+		} else {
+			return false; // dentro curva → skip
+		}
 	}
 
 	public List<String> getLyricsFor(int staffIndex, int voiceNumber, int stanza) {
-	    Staff s = getStaff(staffIndex);
-	    Voice v = s.getVoice(voiceNumber);
-	    List<String> result = new ArrayList<>();
-	    for (NoteEvent n : v.getNotes()) {
-	        Lyric l = n.getLyric(stanza);
-	        if (l != null) {
-	            result.add(l.getSyllable().getText());
-	        }
-	    }
-	    return result;
+		Staff s = getStaff(staffIndex);
+		Voice v = s.getVoice(voiceNumber);
+		List<String> result = new ArrayList<>();
+		for (NoteEvent n : v.getNotes()) {
+			Lyric l = n.getLyric(stanza);
+			if (l != null) {
+				result.add(l.getSyllable().getText());
+			}
+		}
+		return result;
 	}
-
 
 	@Override
 	public Iterator<Staff> iterator() {
@@ -423,6 +413,14 @@ public class Score implements Serializable, Iterable<Staff> {
 		}
 
 		notes.get(notes.size() - 1).tieEnd();
+		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED));
+	}
+
+	public void tie(NoteEvent n1, NoteEvent n2) {
+		// TODO: controlla che il numero midi sia lo stesso
+		n1.tieStart();
+		n2.tieEnd();
+		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED));
 	}
 
 	public void slur(List<NoteEvent> notes) {
@@ -438,6 +436,13 @@ public class Score implements Serializable, Iterable<Staff> {
 		}
 
 		notes.get(notes.size() - 1).slurEnd();
+		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED));
+	}
+
+	public void slur(NoteEvent n1, NoteEvent n2) {
+		n1.slurStart();
+		n2.slurEnd();
+		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED));
 	}
 
 	public void changeTick(MusicObject o, int newTick) {
