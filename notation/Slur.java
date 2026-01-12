@@ -8,19 +8,11 @@ import musicInterface.MusicObject;
 
 public class Slur extends CurvedConnection {
 
-    @Override
-    public void assignToNotes(NoteEvent startNote, NoteEvent endNote) {
-        this.startNote = startNote;
-        this.endNote = endNote;
+	public Slur(NoteEvent startNote, NoteEvent endNote) {
+		super(startNote, endNote);
+	}
 
-        startNote.setSlur(this);
-        endNote.setSlur(this);
-
-        startNote.slurStart();
-        endNote.slurEnd();
-    }
-    
-    public List<NoteEvent> getNotesUnderSlur(Score score) {
+	public List<NoteEvent> getNotesUnderSlur(Score score) {
         List<NoteEvent> notes = new ArrayList<>();
 
         Voice voice = score.getVoiceOf(startNote);

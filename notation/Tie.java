@@ -4,41 +4,24 @@ import musicEvent.NoteEvent;
 
 public class Tie extends CurvedConnection {
 
-    @Override
-    public void assignToNotes(NoteEvent startNote, NoteEvent endNote) {
-        this.startNote = startNote;
-        this.endNote = endNote;
+	    private Tie(NoteEvent startNote, NoteEvent endNote) {
+	        super(startNote, endNote);
+	    }
 
-        startNote.setTie(this);
-        endNote.setTie(this);
+	    public static Tie createIfValid(Score score, NoteEvent start, NoteEvent end) {
+	        if (!isValid(score, start, end)) {
+	            return null;
+	        }
+	        return new Tie(start, end);
+	    }
 
-        startNote.tieStart();
-        endNote.tieEnd();
+	    public static boolean isValid(Score score, NoteEvent start, NoteEvent end) {
+	        Voice v1 = score.getVoiceOf(start);
+	        Voice v2 = score.getVoiceOf(end);
 
-    }
-    
-    public boolean isValid(Score score) {
-
-        Voice v1 = score.getVoiceOf(startNote);
-        Voice v2 = score.getVoiceOf(endNote);
-
-        // stessa voce
-        if (v1 != v2)
-            return false;
-
-        // stessa altezza grafica (o pitch)
-        if (startNote.getMidiNumber() != endNote.getMidiNumber())
-            return false;
-        // oppure: if (startNote.getPitch() != endNote.getPitch()) return false;
-
-        // devono essere consecutive nella voce
-        return score.areNotesConsecutive(startNote, endNote);
-    }
-
-
-    public void detach() {
-        startNote.setTie(null);
-        endNote.setTie(null);
-    }
-    
-}
+	        if (v1 != v2) return false;
+	        if (start.getStaffPosition() != end.getStaffPosition()) return false;
+	        if (start.getAlteration() != end.getAlteration()) return false;
+	        return score.areNotesConsecutive(start, end);
+	    }
+	}

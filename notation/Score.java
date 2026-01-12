@@ -17,10 +17,11 @@ import musicEvent.Rest;
 import musicInterface.MusicObject;
 import notation.ScoreEvent.Type;
 
-public class Score implements Serializable, Iterable<Staff> {
+public class Score implements Serializable, Iterable<Staff>, Observable {
 
-	private ArrayList<ScoreListener> listeners;
-	private ArrayList<Staff> staffList;
+	private List<ScoreListener> listeners;
+	private List<Staff> staffList;
+	private final List<CurvedConnection> curvedConnections = new ArrayList<>();
 	private TimeSignature time;
 	private Partial partial;
 
@@ -251,6 +252,19 @@ public class Score implements Serializable, Iterable<Staff> {
 
 		return null;
 	}
+	
+	public MusicObject getNextObject(MusicObject o) {
+		Voice layer = getVoiceOf(o);
+		if (layer == null)
+			return null;
+		
+		List<MusicObject> objs = layer.getObjects();
+		int index = objs.indexOf(o);
+		// se o è l'ultimo oggetto restituisce null
+		if (index == objs.size() - 1) return null;
+		// restituisce l'oggetto
+		return objs.get(index + 1);
+	}
 
 	/**
 	 * Restituisce la nota precedente nella stessa voce dello stesso staff, oppure
@@ -277,7 +291,9 @@ public class Score implements Serializable, Iterable<Staff> {
 
 	/** Controlla se n1 e n2 sono consecutive **/
 	public boolean areNotesConsecutive(NoteEvent n1, NoteEvent n2) {
-		return getNextNote(n1) == n2;
+		MusicObject mo = getNextObject(n1);
+		if (mo == null) return false;
+		return mo == n2;
 	}
 
 	/** Restituisce la VoiceLayer che contiene la nota, oppure null. */
@@ -328,36 +344,45 @@ public class Score implements Serializable, Iterable<Staff> {
 		int noteIndex = 0;
 		boolean connected = false;
 
+		NoteEvent lastLyricNote = null;
+
 		while (syllableIndex < syllables.size() && noteIndex < notes.size()) {
-			NoteEvent note = notes.get(noteIndex);
-			String syllable = syllables.get(syllableIndex);
+		    String token = syllables.get(syllableIndex);
+		    NoteEvent note = notes.get(noteIndex);
 
-			// Sillabe speciali
-			if ("_".equals(syllable)) {
-				syllableIndex++;
-				noteIndex++;
-				continue;
-			}
-			if ("--".equals(syllable) || "__".equals(syllable)) {
-				syllableIndex++;
-				continue;
-			}
+		    switch (token) {
+		        case "_":
+		            note.setSkipText(true);
+		            noteIndex++;  // avanziamo la nota
+		            syllableIndex++; // anche il token deve essere consumato
+		            break;
 
-			// Assegna lyric se applicabile
-			if (shouldAssignLyric(note, connected)) {
-				Syllable syl = new Syllable(syllable);
-				new Lyric(syl, note, staffIndex, voiceNumber, stanza); // aggiunge automaticamente alla nota
-				syllableIndex++;
+		        case "--":
+		            if (lastLyricNote != null) {
+		                lastLyricNote.setSyllableDivision(true);
+		            }
+		            syllableIndex++; // consumiamo il token di controllo
+		            break;
 
-				if (note.isCurveStart())
-					connected = true;
-			} else {
-				if (note.isCurveEnd())
-					connected = false;
-			}
+		        case "__":
+		            if (lastLyricNote != null) {
+		                note.setLyricExtender(true);
+		            }
+		            noteIndex++; // avanza la nota
+		            syllableIndex++; // e il token
+		            break;
 
-			noteIndex++;
+		        default:
+		            // Token normale: sillaba da assegnare alla nota corrente
+		            Syllable syl = new Syllable(token);
+		            new Lyric(syl, note, staffIndex, voiceNumber, stanza);
+		            lastLyricNote = note;
+		            noteIndex++;
+		            syllableIndex++;
+		            break;
+		    }
 		}
+
 	}
 
 	private boolean shouldAssignLyric(NoteEvent note, boolean connected) {
@@ -375,6 +400,12 @@ public class Score implements Serializable, Iterable<Staff> {
 		for (NoteEvent n : v.getNotes()) {
 			Lyric l = n.getLyric(stanza);
 			if (l != null) {
+				if (n.hasSyllableDivision()) {
+					result.add("--");
+				}
+				else if (n.hasLyricExtender()) {
+					result.add("__");
+				}
 				result.add(l.getSyllable().getText());
 			}
 		}
@@ -394,57 +425,52 @@ public class Score implements Serializable, Iterable<Staff> {
 		listeners.remove(listener);
 	}
 
-	protected void fireScoreEvent(ScoreEvent e) {
+	public void fireScoreEvent(ScoreEvent e) {
 		for (ScoreListener l : listeners) {
 			l.scoreChanged(e);
 		}
 	}
 
-	public void tie(List<NoteEvent> notes) {
-		if (notes == null || notes.size() < 2)
-			return;
+	public List<CurvedConnection> getCurveList() {
+		return curvedConnections;
+	}
+	
+//	public void tie(List<NoteEvent> notes) {
+//		if (notes == null || notes.size() < 2)
+//			return;
+//
+//		for (int i = 0; i < notes.size() - 1; i++) {
+//			NoteEvent n1 = notes.get(i);
+//			NoteEvent n2 = notes.get(i+1);
+//			CurvedConnection c = Tie.createIfValid(this, n1, n2);
+//			listCurve.add(c);
+//		}
+//		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED));
+//	}
+//
+//	public void slur(List<NoteEvent> notes) {
+//		if (notes == null || notes.size() < 2)
+//			return;
+//
+//		for (int i = 0; i < notes.size() - 1; i++) {
+//			NoteEvent n1 = notes.get(i);
+//			NoteEvent n2 = notes.get(i+1);
+//			CurvedConnection c = new Slur(n1, n2);
+//			listCurve.add(c);
+//		}
+//		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED));
+//	}
+//
+	public void addCurvedConnection(CurvedConnection c) {
+		curvedConnections.add(c);
+		NoteEvent n1 = c.getStart();
+		NoteEvent n2 = c.getEnd();
 
-		notes.get(0).tieStart();
-
-		for (int i = 1; i < notes.size() - 1; i++) {
-			NoteEvent n = notes.get(i);
-			n.tieEnd();
-			n.tieStart();
-		}
-
-		notes.get(notes.size() - 1).tieEnd();
+		n1.addCurvedConnection(c);
+		n2.addCurvedConnection(c);
 		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED));
 	}
-
-	public void tie(NoteEvent n1, NoteEvent n2) {
-		// TODO: controlla che il numero midi sia lo stesso
-		n1.tieStart();
-		n2.tieEnd();
-		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED));
-	}
-
-	public void slur(List<NoteEvent> notes) {
-		if (notes == null || notes.size() < 2)
-			return;
-
-		notes.get(0).slurStart();
-
-		for (int i = 1; i < notes.size() - 1; i++) {
-			NoteEvent n = notes.get(i);
-			n.slurEnd();
-			n.slurStart();
-		}
-
-		notes.get(notes.size() - 1).slurEnd();
-		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED));
-	}
-
-	public void slur(NoteEvent n1, NoteEvent n2) {
-		n1.slurStart();
-		n2.slurEnd();
-		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED));
-	}
-
+	
 	public void changeTick(MusicObject o, int newTick) {
 		int staffIndex = o.getStaffIndex();
 		int voiceIndex = o.getVoiceIndex();

@@ -4,41 +4,28 @@ import musicEvent.NoteEvent;
 
 public abstract class CurvedConnection {
 
-    protected NoteEvent startNote;
-    protected NoteEvent endNote;
+    protected final NoteEvent startNote;
+    protected final NoteEvent endNote;
 
-    public abstract void assignToNotes(NoteEvent startNote, NoteEvent endNote);
+    public CurvedConnection(NoteEvent startNote, NoteEvent endNote) {
+        this.startNote = startNote;
+        this.endNote = endNote;
+    }
 
-    // -----------------------------
-    //     GETTER PER LE NOTE
-    // -----------------------------
-    public NoteEvent getStartNote() {
+    public NoteEvent getStart() {
         return startNote;
     }
 
-    public NoteEvent getEndNote() {
+    public NoteEvent getEnd() {
         return endNote;
     }
-
-    public void removeFromNotes() {
-        if (this instanceof Slur) {
-            if (startNote != null) {
-                startNote.setSlur(null);
-                startNote.slurNone();
-            }
-            if (endNote != null) {
-                endNote.setSlur(null);
-                endNote.slurNone();
-            }
-        } else if (this instanceof Tie) {
-            if (startNote != null) {
-                startNote.setTie(null);
-                startNote.tieNone();
-            }
-            if (endNote != null) {
-                endNote.setTie(null);
-                endNote.tieNone();
-            }
-        }
+    
+    public boolean isStart(NoteEvent n) {
+        return n == startNote;
     }
+
+    public boolean isEnd(NoteEvent n) {
+        return n == endNote;
+    }
+
 }

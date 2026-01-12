@@ -1,9 +1,12 @@
 package musicEvent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import musicInterface.MusicObject;
+import notation.CurvedConnection;
 import notation.Lyric;
 import notation.Slur;
 import notation.Tie;
@@ -20,13 +23,11 @@ public abstract class NoteEvent extends MusicEvent {
 	protected int midiNumber = -1;
 	protected int alteration = 0;
 	private Map<Integer, Lyric> lyrics = null;
-	private boolean slurStart = false;
-	private boolean slurEnd = false;
-	private boolean tieStart = false;
-	private boolean tieEnd = false;
-	private Slur slur;
-	private Tie tie;
 	private int staffPosition;
+	private boolean lyricExtender = false;
+	private boolean syllableDivision = false;
+	private boolean skipText;
+	private List<CurvedConnection> connections = new ArrayList<>();
 
 
 	protected NoteEvent() {
@@ -114,70 +115,106 @@ public abstract class NoteEvent extends MusicEvent {
 	    }
 	}
 	
-	public void slurStart() {
-		slurStart = true;
-	}
-
-	public void slurEnd() {
-		slurEnd = true;
-	}
-
-	public void slurNone() {
-		slurStart = slurEnd = false;
-	}
-
-	public void tieStart() {
-		tieStart = true;
-	}
-
-	public void tieEnd() {
-		tieEnd = true;
-	}
-
-	public void tieNone() {
-		tieStart = tieEnd = false;
-	}
-
-	public boolean isSlurStart() {
-		return slurStart;
-	}
-
-	public boolean isSlurEnd() {
-		return slurEnd;
-	}
-
-	public boolean isTiedStart() {
-		return tieStart;
-	}
-
-	public boolean isTiedEnd() {
-		return tieEnd;
+	public void addCurvedConnection(CurvedConnection c) {
+		connections.add(c);
 	}
 	
-	public void setSlur(Slur slur) {
-		this.slur = slur;
-	}
-
-	public void setTie(Tie tie) {
-		this.tie = tie;
-	}
-
-	public Slur getSlur() {
-		return slur;
-	}
-
-	public Tie getTie() {
-		return tie;
+	public void removeConnection(CurvedConnection c) {
+	        connections.remove(c);
+	    }
+	
+	public boolean isTied() {
+		for (CurvedConnection c : connections) {
+			if (c instanceof Tie) return true;
+		}
+		return false;
 	}
 	
-	public boolean isCurveStart() {
-		return isTiedStart() || isSlurStart();
-	}
-
-	public boolean isCurveEnd() {
-		return isTiedEnd() || isSlurEnd();
+	public List<Tie> getTies() {
+	    List<Tie> ties = new ArrayList<>();
+	    for (CurvedConnection c : connections) {
+	        if (c instanceof Tie) {
+	            ties.add((Tie) c);
+	        }
+	    }
+	    return ties;
 	}
 	
+	public List<Slur> getSlurs() {
+	    List<Slur> slurs = new ArrayList<>();
+	    for (CurvedConnection c : connections) {
+	        if (c instanceof Slur) {
+	            slurs.add((Slur) c);
+	        }
+	    }
+	    return slurs;
+	}
+	  
+//	
+//	public void slurStart() {
+//		slurStart = true;
+//	}
+//
+//	public void slurEnd() {
+//		slurEnd = true;
+//	}
+//
+//	public void slurNone() {
+//		slurStart = slurEnd = false;
+//	}
+//
+//	public void tieStart() {
+//		tieStart = true;
+//	}
+//
+//	public void tieEnd() {
+//		tieEnd = true;
+//	}
+//
+//	public void tieNone() {
+//		tieStart = tieEnd = false;
+//	}
+//
+//	public boolean isSlurStart() {
+//		return slurStart;
+//	}
+//
+//	public boolean isSlurEnd() {
+//		return slurEnd;
+//	}
+//
+//	public boolean isTiedStart() {
+//		return tieStart;
+//	}
+//
+//	public boolean isTiedEnd() {
+//		return tieEnd;
+//	}
+//	
+//	public void setSlur(Slur slur) {
+//		this.slur = slur;
+//	}
+//
+//	public void setTie(Tie tie) {
+//		this.tie = tie;
+//	}
+//
+//	public Slur getSlur() {
+//		return slur;
+//	}
+//
+//	public Tie getTie() {
+//		return tie;
+//	}
+//	
+//	public boolean isCurveStart() {
+//		return isTiedStart() || isSlurStart();
+//	}
+//
+//	public boolean isCurveEnd() {
+//		return isTiedEnd() || isSlurEnd();
+//	}
+//	
 	public void setStaffPosition(int p) {
 		staffPosition = p;
 	}
@@ -185,5 +222,28 @@ public abstract class NoteEvent extends MusicEvent {
 	public int getStaffPosition() {
 		return staffPosition;
 	}
-
+	
+	public void setLyricExtender(boolean le) {
+	lyricExtender = le;
+	}
+	
+	public void setSyllableDivision(boolean sd) {
+		syllableDivision = sd;
+	}
+	
+	public boolean hasLyricExtender() {
+		return lyricExtender;
+	}
+	
+	public boolean hasSyllableDivision() {
+		return syllableDivision;
+	}
+	
+	public void setSkipText(boolean st) {
+		skipText = st;
+	}
+	
+	public boolean isSkipText() {
+		return skipText;
+	}
 }
