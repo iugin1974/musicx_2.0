@@ -119,9 +119,13 @@ public abstract class NoteEvent extends MusicEvent {
 		connections.add(c);
 	}
 	
-	public void removeConnection(CurvedConnection c) {
+	public void removeCurvedConnection(CurvedConnection c) {
 	        connections.remove(c);
 	    }
+	
+	public List<CurvedConnection> getCurvedConnections() {
+		return connections;
+	}
 	
 	public boolean isTied() {
 		for (CurvedConnection c : connections) {
@@ -149,7 +153,7 @@ public abstract class NoteEvent extends MusicEvent {
 	    }
 	    return slurs;
 	}
-	  
+	
 //	
 //	public void slurStart() {
 //		slurStart = true;
@@ -217,6 +221,7 @@ public abstract class NoteEvent extends MusicEvent {
 //	
 	public void setStaffPosition(int p) {
 		staffPosition = p;
+		System.out.println("Staff position: " +p);
 	}
 	
 	public int getStaffPosition() {

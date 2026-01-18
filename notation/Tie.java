@@ -6,6 +6,7 @@ public class Tie extends CurvedConnection {
 
 	    private Tie(NoteEvent startNote, NoteEvent endNote) {
 	        super(startNote, endNote);
+	        System.out.println("Tie");
 	    }
 
 	    public static Tie createIfValid(Score score, NoteEvent start, NoteEvent end) {

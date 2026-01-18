@@ -10,9 +10,11 @@ public class Slur extends CurvedConnection {
 
 	public Slur(NoteEvent startNote, NoteEvent endNote) {
 		super(startNote, endNote);
+		System.out.println("Slur");
 	}
 
 	public List<NoteEvent> getNotesUnderSlur(Score score) {
+		System.out.println("Search notes under slur");
         List<NoteEvent> notes = new ArrayList<>();
 
         Voice voice = score.getVoiceOf(startNote);

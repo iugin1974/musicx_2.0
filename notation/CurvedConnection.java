@@ -1,8 +1,9 @@
 package notation;
 
 import musicEvent.NoteEvent;
+import musicInterface.MusicObject;
 
-public abstract class CurvedConnection {
+public abstract class CurvedConnection extends MusicObject {
 
     protected final NoteEvent startNote;
     protected final NoteEvent endNote;
@@ -26,6 +27,12 @@ public abstract class CurvedConnection {
 
     public boolean isEnd(NoteEvent n) {
         return n == endNote;
+    }
+    
+    public NoteEvent getOther(NoteEvent note) {
+        if (note == startNote) return endNote;
+        if (note == endNote) return startNote;
+        return null; 
     }
 
 }
