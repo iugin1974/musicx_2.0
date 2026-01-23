@@ -272,6 +272,10 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 		return staffList.size();
 	}
 
+	public int getStaffIndex(Staff s) {
+		return staffList.indexOf(s);
+	}
+	
 	/**
 	 * Restituisce la nota successiva nella stessa voce dello stesso staff, oppure
 	 * null se è l'ultima.
@@ -513,12 +517,12 @@ System.out.println();
 		for (NoteEvent n : v.getNotes()) {
 			Lyric l = n.getLyric(stanza);
 			if (l != null) {
+				result.add(l.getSyllable().getText());
 				if (n.hasSyllableDivision()) {
 					result.add("--");
 				} else if (n.hasLyricExtender()) {
 					result.add("__");
 				}
-				result.add(l.getSyllable().getText());
 			}
 		}
 		return result;
