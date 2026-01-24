@@ -187,7 +187,7 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 		return staffList;
 	}
 
-	/** restituisce una lista con tutti gli oggetti di tutti gli staves */
+	/** restituisce una lista ordinata in base ai tick con tutti gli oggetti di tutti gli staves */
 	public List<MusicObject> getAllObjects() {
 		List<MusicObject> all = new ArrayList<>();
 		for (Staff staff : staffList) {
@@ -195,6 +195,7 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 				all.addAll(v.getObjects());
 			}
 		}
+		all.sort(new CompareTick());
 		return all;
 	}
 

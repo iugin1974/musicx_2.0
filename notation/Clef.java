@@ -41,6 +41,12 @@ public class Clef extends MusicObject {
         return semitoneMap;
     }
 
+    public int getPosInStaff() {
+    	if (type == Type.TREBLE || type == Type.TREBLE_8) return 1;
+    	if (type == Type.BASS || type == Type.BARITONE) return 3;
+    	return 3;
+    }
+    
     // --- equals / hashCode ---
     @Override
     public boolean musicallyEquals(MusicObject obj) {
