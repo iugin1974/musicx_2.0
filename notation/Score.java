@@ -14,6 +14,7 @@ import javax.swing.JOptionPane;
 import Measure.Bar;
 import Measure.Partial;
 import Measure.TimeSignature;
+import musicEvent.Modus;
 import musicEvent.MusicEvent;
 import musicEvent.Note;
 import musicEvent.NoteEvent;
@@ -680,5 +681,49 @@ System.out.println();
 		getStaff(staffIndex).getVoice(voiceIndex).changeTick(o, newTick);
 		System.out.println("Change Tick: StaffIndex " + staffIndex+", voiceIndex: "+ voiceIndex + ", Object: " +o + ", Tick: " + newTick);
 		
+	}
+	
+	/**
+	 * Trova la chiave valida nel tick <i>tick</i>.
+	 * Se non vi è una chiave, restituisce <i>null</i>
+	 * @param staffIndex
+	 * @param atTick
+	 * @return
+	 */
+	public KeySignature getKeySignature(int staffIndex, int atTick) {
+		List<MusicObject> objs = getStaffWideObjects(getStaff(staffIndex));
+		KeySignature lastKeySignature = new KeySignature(0, 0, Modus.MAJOR_SCALE); // fallback
+	    // scorrere all’indietro
+	    for (int i = objs.size() - 1; i >= 0; i--) {
+	        MusicObject obj = objs.get(i);
+	        if (obj.getTick() <= atTick && obj instanceof KeySignature) {
+	        	lastKeySignature = (KeySignature) obj;
+	            break; // trovato l’ultima chiave valida
+	        }
+	    }
+
+	    return lastKeySignature;
+	}
+	
+	/**
+	 * Trova la chiave valida nel tick <i>tick</i>.
+	 * Se non vi è una chiave, restituisce <i>null</i>
+	 * @param staffIndex
+	 * @param atTick
+	 * @return
+	 */
+	public Clef getClef(int staffIndex, int atTick) {
+		List<MusicObject> objs = getStaffWideObjects(getStaff(staffIndex));
+		Clef lastClef = null;
+	    // scorrere all’indietro
+	    for (int i = objs.size() - 1; i >= 0; i--) {
+	        MusicObject obj = objs.get(i);
+	        if (obj.getTick() <= atTick && obj instanceof Clef) {
+	            lastClef = (Clef) obj;
+	            break; // trovato l’ultima chiave valida
+	        }
+	    }
+
+	    return lastClef;
 	}
 }
