@@ -5,14 +5,14 @@ import musicInterface.MusicObject;
 public class Bar extends MusicObject {
 
     public enum Type {
-        NORMAL, DOUBLE, END, BEGIN_REPEAT, END_REPEAT
+        SINGLE, DOUBLE, END, BEGIN_REPEAT, END_REPEAT
     }
 
     private Type type;
     private String bar = " | "; // compatibilità con vecchio codice
 
     public Bar() {
-        this.type = Type.NORMAL;
+        this.type = Type.SINGLE;
     }
 
     public void setEndBar() {
@@ -35,8 +35,8 @@ public class Bar extends MusicObject {
         bar = " \\bar \":|\" ";
     }
 
-    private void setNormalBar() {
-        type = Type.NORMAL;
+    private void setSingleBar() {
+        type = Type.SINGLE;
         bar = " | ";
     }
 

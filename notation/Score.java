@@ -1,5 +1,6 @@
 package notation;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -9,18 +10,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.JOptionPane;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 
-import Measure.Bar;
+import org.xml.sax.SAXException;
+
 import Measure.Partial;
 import Measure.TimeSignature;
 import musicEvent.Modus;
-import musicEvent.MusicEvent;
-import musicEvent.Note;
 import musicEvent.NoteEvent;
-import musicEvent.Rest;
 import musicInterface.MusicObject;
-import notation.ScoreEvent.Type;
 
 public class Score implements Serializable, Iterable<Staff>, Observable {
 
@@ -48,12 +47,12 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 		return s;
 	}
 
-	public void setTimeSignature(TimeSignature time) {
-		this.time = time;
-		for (Staff s : staffList) {
-			s.setTimeSignature(time);
-		}
-	}
+//	public void setTimeSignature(TimeSignature time) {
+//		this.time = time;
+//		for (Staff s : staffList) {
+//			s.setTimeSignature(time);
+//		}
+//	}
 
 	public void setPartial(Partial p) {
 		this.partial = p;
@@ -725,5 +724,14 @@ System.out.println();
 	    }
 
 	    return lastClef;
+	}
+	
+	public void save() {
+		ScoreToXML s = new ScoreToXML(this);
+		try {
+			s.parse();
+		} catch (ParserConfigurationException | SAXException | IOException | TransformerException e) {
+			// TODO Auto-generated catch block
+		}
 	}
 }

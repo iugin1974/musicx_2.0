@@ -11,7 +11,7 @@ import musicInterface.MusicObject;
 public class Staff implements Iterable<Voice> {
 
 	private List<Voice> voices;
-	private TimeSignature timeSignature;
+	//private TimeSignature timeSignature;
 	private Partial partial;
 	
 	protected Staff() {
@@ -86,13 +86,13 @@ public class Staff implements Iterable<Voice> {
 		getVoice(voiceNumber).clear();
 	}
 
-	protected TimeSignature getTimeSignature() {
-		return timeSignature;
-	}
-	
-	protected void setTimeSignature(TimeSignature t) {
-		timeSignature = t;
-	}
+//	protected TimeSignature getTimeSignature() {
+//		return timeSignature;
+//	}
+//	
+//	protected void setTimeSignature(TimeSignature t) {
+//		timeSignature = t;
+//	}
 
 	protected void setPartial(Partial p) {
 		partial = p;
