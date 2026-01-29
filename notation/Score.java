@@ -734,4 +734,14 @@ System.out.println();
 			// TODO Auto-generated catch block
 		}
 	}
+
+	public void load() {
+		ScoreToXML s = new ScoreToXML(this);
+		try {
+			s.load();
+		} catch (ParserConfigurationException | SAXException | IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
 }

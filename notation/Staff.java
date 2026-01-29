@@ -19,7 +19,7 @@ public class Staff implements Iterable<Voice> {
 		voices.add(new Voice(0));
 		voices.add(new Voice(1));
 	}
-	
+	// TODO -> correggi l'aggiunta di voices. Non è coerente adesso
 	protected void addVoice() {
 		int i = voices.size();
 		voices.add(new Voice(i));

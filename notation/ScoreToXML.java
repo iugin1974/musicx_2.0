@@ -15,6 +15,8 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import Measure.Bar;
@@ -28,6 +30,92 @@ public class ScoreToXML {
 
 	public ScoreToXML(Score score) {
 		this.score = score;
+	}
+
+	public void load() throws ParserConfigurationException, SAXException, IOException {
+		File xmlFile = new File("/tmp/musicWriter.xml");
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = factory.newDocumentBuilder();
+        Document doc = dBuilder.parse(xmlFile);
+        doc.getDocumentElement().normalize();
+        NodeList staffList = doc.getElementsByTagName("staff");
+        for (int staffIndex = 0; staffIndex < staffList.getLength(); staffIndex++) {
+        	Element staffEl = (Element) staffList.item(staffIndex);
+        	score.addStaff();
+        	
+        	// legge voice
+        	NodeList voiceList = staffEl.getElementsByTagName("voice");
+        	for (int voiceIndex = 0; voiceIndex < voiceList.getLength(); voiceIndex++) {
+        		Element voiceEl = (Element) voiceList.item(voiceIndex);
+        		
+        		// legge objects
+        		NodeList objectList = voiceEl.getElementsByTagName("object");
+        		for (int o = 0; o < objectList.getLength(); o++) {
+        			Element objectEl = (Element) objectList.item(o);
+        			parseObject(score, objectEl, staffIndex, voiceIndex);
+        		}
+        		
+        	}
+        }
+	}
+	
+	private void parseObject(Score score, Element objectEl, int staffIndex, int voiceIndex) {
+	    int tick = Integer.parseInt(objectEl.getAttribute("tick"));
+
+	    // Prendi tutti gli elementi figli
+	    NodeList children = objectEl.getChildNodes();
+	    MusicObject mo = null;
+
+	    for (int i = 0; i < children.getLength(); i++) {
+	        Node child = children.item(i);
+	        if (child.getNodeType() != Node.ELEMENT_NODE) continue;
+
+	        Element childEl = (Element) child;
+	        String nodeName = childEl.getNodeName();
+
+	        switch (nodeName) {
+	            case "note":
+	                mo = parseNote(childEl, tick);
+	                break;
+	            case "rest":
+	                mo = parseRest(childEl, tick);
+	                break;
+	            case "bar":
+	                mo = parseBar(childEl, tick);
+	                break;
+	            default:
+	                // tipo non riconosciuto → ignora o logga
+	                System.out.println("Unknown object child: " + nodeName);
+	        }
+
+	        // Aggiungi l'oggetto se è stato creato
+	        if (mo != null) {
+	            score.addObject(mo, staffIndex, voiceIndex);
+	            mo = null; // pronto per eventuali altri figli
+	        }
+	    }
+
+	}
+
+
+	private MusicObject parseRest(Element restEl, int tick) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private Note parseNote(Element noteEl, int tick) {
+		int midi = stringAsInt(noteEl.getAttribute("midi"));
+		int alteration = stringAsInt(noteEl.getAttribute("alteration"));
+		int duration = stringAsInt(noteEl.getAttribute("duration"));
+		int dots = stringAsInt(noteEl.getAttribute("dots"));
+		
+		return new Note( midi,  alteration,  duration,  dots);
+	}
+
+	
+	private MusicObject parseBar(Element BarEl, int tick) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	public void parse() throws ParserConfigurationException, SAXException, IOException, TransformerException {
@@ -131,5 +219,9 @@ public class ScoreToXML {
 
 	private String intAsString(int i) {
 		return String.valueOf(i);
+	}
+	
+	private int stringAsInt(String s) {
+		return Integer.parseInt(s);
 	}
 }
