@@ -83,6 +83,9 @@ public class ScoreToXML {
 	            case "bar":
 	                mo = parseBar(childEl, tick);
 	                break;
+	            case "clef":
+	            	mo = parseClef(childEl, tick);
+	            	break;
 	            default:
 	                // tipo non riconosciuto → ignora o logga
 	                System.out.println("Unknown object child: " + nodeName);
@@ -108,15 +111,61 @@ public class ScoreToXML {
 		int alteration = stringAsInt(noteEl.getAttribute("alteration"));
 		int duration = stringAsInt(noteEl.getAttribute("duration"));
 		int dots = stringAsInt(noteEl.getAttribute("dots"));
-		
-		return new Note( midi,  alteration,  duration,  dots);
+		Note n = new Note( midi,  alteration,  duration,  dots);
+		n.setTick(tick);
+		return n;
 	}
 
-	
-	private MusicObject parseBar(Element BarEl, int tick) {
-		// TODO Auto-generated method stub
-		return null;
+	private Clef parseClef(Element clefEl, int tick) {
+	    String type = clefEl.getAttribute("type");
+	    Clef c;
+
+	    switch (type) {
+	        case "treble":
+	            c = Clef.treble();
+	            break;
+	        case "treble_8":
+	            c = Clef.treble8();
+	            break;
+	        case "bass":
+	            c = Clef.bass();
+	            break;
+	        default:
+	            throw new IllegalArgumentException("Clef non supportata: " + type);
+	    }
+
+	    c.setTick(tick);
+	    return c;
 	}
+	
+	private Bar parseBar(Element barEl, int tick) {
+	    String type = barEl.getAttribute("type");
+	    Bar bar = new Bar();
+
+	    switch (type) {
+	        case "single":
+	            // default già è singolo, non serve fare nulla
+	            break;
+	        case "double":
+	            bar.setDoubleBar();
+	            break;
+	        case "end":
+	            bar.setEndBar();
+	            break;
+	        case "beginRepeat":
+	            bar.setBeginRepeatBar();
+	            break;
+	        case "endRepeat":
+	            bar.setEndRepeatBar();
+	            break;
+	        default:
+	            throw new IllegalArgumentException("Tipo di barra non supportato: " + type);
+	    }
+
+	    bar.setTick(tick);
+	    return bar;
+	}
+
 
 	public void parse() throws ParserConfigurationException, SAXException, IOException, TransformerException {
 		File xmlFile = new File("/tmp/musicWriter.xml");
@@ -161,6 +210,9 @@ public class ScoreToXML {
 		} else if (mo instanceof Bar) {
 			Element barElement = parseBar((Bar) mo, doc);
 			e.appendChild(barElement);
+		} else if (mo instanceof Clef) {
+			Element clefElement = parseClef((Clef) mo, doc);
+			e.appendChild(clefElement);
 		}
 
 		return e;
@@ -183,6 +235,18 @@ public class ScoreToXML {
 		return e;
 	}
 
+	private Element parseClef(Clef clef, Document doc) {
+		Element e = doc.createElement("clef");
+		if (clef.getType() == Clef.Type.TREBLE)
+			e.setAttribute("type", "treble");
+		else if (clef.getType() == Clef.Type.TREBLE_8)
+		e.setAttribute("type", "treble_8");
+		else if (clef.getType() == Clef.Type.BASS)
+			e.setAttribute("type", "bass");
+		// TODO continua
+		return e;
+	}
+	
 	private Element parseBar(Bar mo, Document doc) {
 		Element e = doc.createElement("bar");
 		if (mo.getType() == Bar.Type.DOUBLE)
