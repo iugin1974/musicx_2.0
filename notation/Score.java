@@ -711,7 +711,7 @@ System.out.println();
 	 * @param atTick
 	 * @return
 	 */
-	public Clef getClef(int staffIndex, int atTick) {
+	public Clef getLastClef(int staffIndex, int atTick) {
 		List<MusicObject> objs = getStaffWideObjects(getStaff(staffIndex));
 		Clef lastClef = null;
 	    // scorrere all’indietro
@@ -725,6 +725,43 @@ System.out.println();
 
 	    return lastClef;
 	}
+	
+	public List<NoteEvent> getNotesAffectedByClef(Clef clef) {
+		int staffIndex = clef.getStaffIndex();
+		Staff staff = getStaff(staffIndex);
+
+		VoiceMixer mv = new VoiceMixer(this);
+		List<List<MusicObject>> mixed = mv.mixStaff(staff);
+
+		List<NoteEvent> result = new ArrayList<>();
+
+		for (List<MusicObject> voice : mixed) {
+
+			boolean inRange = false;
+
+			for (MusicObject obj : voice) {
+
+				// Inizio dell'intervallo: questa clef
+				if (obj == clef) {
+					inRange = true;
+					continue;
+				}
+
+				// Fine dell'intervallo: prossima clef
+				if (inRange && obj instanceof Clef) {
+					break;
+				}
+
+				// Nota influenzata
+				if (inRange && obj instanceof NoteEvent note) {
+					result.add(note);
+				}
+			}
+		}
+
+		return result;
+	}
+
 	
 	public void save() {
 		ScoreToXML s = new ScoreToXML(this);
