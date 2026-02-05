@@ -52,12 +52,11 @@ public class ScoreEvent {
     }
 
     /** Eventi che riguardano un MUSIC OBJECT */
-    public ScoreEvent(Type type, MusicObject musicObject,
-                      int staffIndex, int voiceIndex) {
+    public ScoreEvent(Type type, MusicObject musicObject) {
         this.type = type;
         this.musicObject = musicObject;
-        this.staffIndex = staffIndex;
-        this.voiceIndex = voiceIndex;
+        this.staffIndex = musicObject.getStaffIndex();
+        this.voiceIndex = musicObject.getVoiceIndex();
 
         this.staff = null;
     }

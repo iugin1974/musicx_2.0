@@ -101,7 +101,7 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 		obj.setVoiceIndex(voiceIndex);
 		s.getVoice(voiceIndex).addObject(obj);
 
-		ScoreEvent e = new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED, obj, staffIndex, voiceIndex);
+		ScoreEvent e = new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED, obj);
 		fireScoreEvent(e);
 	}
 
@@ -247,7 +247,7 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 			int voiceIndex = staff.removeObject(obj);
 
 			if (voiceIndex != -1) {
-				ScoreEvent ev = new ScoreEvent(ScoreEvent.Type.OBJECT_REMOVED, obj, s, voiceIndex);
+				ScoreEvent ev = new ScoreEvent(ScoreEvent.Type.OBJECT_REMOVED, obj);
 				fireScoreEvent(ev);
 			}
 		}
@@ -267,7 +267,7 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 			int voiceIndex = staff.removeObject(note);
 
 			if (voiceIndex != -1) {
-				ScoreEvent ev = new ScoreEvent(ScoreEvent.Type.OBJECT_REMOVED, note, s, voiceIndex);
+				ScoreEvent ev = new ScoreEvent(ScoreEvent.Type.OBJECT_REMOVED, note);
 				fireScoreEvent(ev);
 			}
 		}
@@ -576,7 +576,7 @@ System.out.println();
 		int staffIndex = c.getStaffIndex();
 
 		System.out.println("Connection removed");
-		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_REMOVED, c, staffIndex, 0));
+		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_REMOVED, c));
 	}
 
 	/**
@@ -683,7 +683,7 @@ System.out.println();
 		n1.addCurvedConnection(c);
 		n2.addCurvedConnection(c);
 		updateLyrics(c.getStaffIndex(), n1.getVoiceIndex());
-		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED, c, c.getStaffIndex(), 0));
+		fireScoreEvent(new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED, c));
 	}
 
 	public void changeTick(MusicObject o, int newTick) {
