@@ -18,6 +18,7 @@ import org.xml.sax.SAXException;
 import Measure.Partial;
 import Measure.TimeSignature;
 import musicEvent.Modus;
+import musicEvent.Note;
 import musicEvent.NoteEvent;
 import musicInterface.MusicObject;
 
@@ -85,6 +86,9 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 
 	/** Aggiunge un oggetto allo staff e alla voce indicata */
 	public void addObject(MusicObject obj, int staffIndex, int voiceIndex) {
+		if (obj instanceof Note && ((Note) obj).getAlteration() == 0) {
+			obj = addAlterations((Note) obj, staffIndex);
+		}
 		Staff s = staffList.get(staffIndex);
 
 		// se non ci sono abbastanza voci per lo staff, vengono create
@@ -99,6 +103,14 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 
 		ScoreEvent e = new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED, obj, staffIndex, voiceIndex);
 		fireScoreEvent(e);
+	}
+
+	private MusicObject addAlterations(Note n, int staffIndex) {
+		int tick = n.getTick();
+		KeySignature ks = getKeySignature(staffIndex, tick);
+		int alt = ks.getAlteration(n.getMidiNumber());
+		n.setAlteration(alt);
+		return n;
 	}
 
 	/** Restituisce la lista degli oggetti di uno staff e voce specifici */

@@ -117,7 +117,10 @@ public class Note extends NoteEvent implements Comparable<Note>, Serializable {
 
 	@Override
 	public Note getCopy() {
-		return new Note(midiNumber, alteration, duration, dots);
+		Note n = new Note(midiNumber, alteration, duration, dots);
+		n.setTick(this.getTick());
+		// TODO -> finisci la copia
+		return n;
 	}
 	
 	public boolean equalsHeight(Note note) {
