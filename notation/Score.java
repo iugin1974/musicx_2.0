@@ -1,5 +1,6 @@
 package notation;
 
+import java.awt.Window.Type;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayDeque;
@@ -86,9 +87,6 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 
 	/** Aggiunge un oggetto allo staff e alla voce indicata */
 	public void addObject(MusicObject obj, int staffIndex, int voiceIndex) {
-		if (obj instanceof Note && ((Note) obj).getAlteration() == 0) {
-			obj = addAlterations((Note) obj, staffIndex);
-		}
 		Staff s = staffList.get(staffIndex);
 
 		// se non ci sono abbastanza voci per lo staff, vengono create
@@ -103,14 +101,6 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 
 		ScoreEvent e = new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED, obj);
 		fireScoreEvent(e);
-	}
-
-	private MusicObject addAlterations(Note n, int staffIndex) {
-		int tick = n.getTick();
-		KeySignature ks = getKeySignature(staffIndex, tick);
-		int alt = ks.getAlteration(n.getMidiNumber());
-		n.setAlteration(alt);
-		return n;
 	}
 
 	/** Restituisce la lista degli oggetti di uno staff e voce specifici */
@@ -192,6 +182,57 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 		}
 
 		return notes;
+	}
+
+	/**
+	 * Restituisce tutte le note di una voce specifica di uno staff
+	 * comprese tra due tick estremi inclusi.
+	 *
+	 * @param staffNumber il numero dello staff da cui prendere le note
+	 * @param voiceNumber il numero della voce da cui prendere le note
+	 * @param tick1 il tick iniziale (incluso)
+	 * @param tick2 il tick finale (incluso)
+	 * @return una lista di {@link NoteEvent} ordinate per tick,
+	 *         che si trovano nell'intervallo [tick1, tick2];
+	 *         se lo staff o la voce non esistono, ritorna una lista vuota
+	 */
+	public List<NoteEvent> getNotesBetween(int staffNumber, int voiceNumber, int tick1, int tick2) {
+	    List<NoteEvent> allNotes = getNotes(staffNumber, voiceNumber);
+	    List<NoteEvent> notesInRange = new ArrayList<>();
+
+	    for (NoteEvent note : allNotes) {
+	        int tick = note.getTick();
+	        if (tick >= tick1 && tick <= tick2) {
+	            notesInRange.add(note);
+	        }
+	    }
+
+	    return notesInRange;
+	}
+	
+	/**
+	 * Restituisce tutte le note di tutte le voci di uno staff
+	 * comprese tra due tick estremi inclusi.
+	 *
+	 * @param staffNumber il numero dello staff da cui prendere le note
+	 * @param tick1 il tick iniziale (incluso)
+	 * @param tick2 il tick finale (incluso)
+	 * @return una lista di {@link NoteEvent} ordinate per tick,
+	 *         che si trovano nell'intervallo [tick1, tick2];
+	 *         se lo staff non esiste, ritorna una lista vuota
+	 */
+	public List<NoteEvent> getAllNotesBetween(int staffNumber, int tick1, int tick2) {
+	    List<NoteEvent> notesInRange = new ArrayList<>();
+	    Staff staff = staffList.get(staffNumber);
+
+	    for (int voiceNumber = 0; voiceNumber < staff.getNumberOfVoices(); voiceNumber++) {
+	        notesInRange.addAll(getNotesBetween(staffNumber, voiceNumber, tick1, tick2));
+	    }
+
+	    // opzionale: ordina per tick
+	    notesInRange.sort(new CompareTick());
+
+	    return notesInRange;
 	}
 
 	/** Restituisce lo staffList completo */
@@ -694,86 +735,49 @@ System.out.println();
 		
 	}
 	
+	
 	/**
-	 * Trova la chiave valida nel tick <i>tick</i>.
-	 * Se non vi è una chiave, restituisce <i>null</i>
+	 * Trova l'ultimo oggetto della classe <i>clazz</i> prima del tick <i>tick</i>.
+	 * Se non vi è nulla, restituisce <i>null</i>
 	 * @param staffIndex
 	 * @param atTick
 	 * @return
 	 */
-	public KeySignature getKeySignature(int staffIndex, int atTick) {
-		List<MusicObject> objs = getStaffWideObjects(getStaff(staffIndex));
-		KeySignature lastKeySignature = new KeySignature(0, 0, Modus.MAJOR_SCALE); // fallback
-	    // scorrere all’indietro
+	@SuppressWarnings("unchecked")
+	public <T extends MusicObject> T getLastObjectOfType(int staffIndex, int atTick, Class<T> clazz) {
+	    List<MusicObject> objs = getStaffWideObjects(getStaff(staffIndex));
 	    for (int i = objs.size() - 1; i >= 0; i--) {
 	        MusicObject obj = objs.get(i);
-	        if (obj.getTick() <= atTick && obj instanceof KeySignature) {
-	        	lastKeySignature = (KeySignature) obj;
-	            break; // trovato l’ultima chiave valida
+	        if (obj.getTick() <= atTick && clazz.isInstance(obj)) {
+	            return (T) obj; // cast sicuro perché abbiamo controllato con isInstance
 	        }
 	    }
-
-	    return lastKeySignature;
+	    return null;
 	}
 	
 	/**
-	 * Trova la chiave valida nel tick <i>tick</i>.
-	 * Se non vi è una chiave, restituisce <i>null</i>
-	 * @param staffIndex
-	 * @param atTick
-	 * @return
+	 * Trova il primo oggetto della classe <i>clazz</i> a partire dal tick <i>atTick</i> (incluso).
+	 * Se non vi è nulla, restituisce <i>null</i>
 	 */
-	public Clef getLastClef(int staffIndex, int atTick) {
-		List<MusicObject> objs = getStaffWideObjects(getStaff(staffIndex));
-		Clef lastClef = null;
-	    // scorrere all’indietro
-	    for (int i = objs.size() - 1; i >= 0; i--) {
+	@SuppressWarnings("unchecked")
+	public <T extends MusicObject> T getNextObjectOfType(int staffIndex, int atTick, Class<T> clazz) {
+	    List<MusicObject> objs = getStaffWideObjects(getStaff(staffIndex));
+	    for (int i = 0; i < objs.size(); i++) {
 	        MusicObject obj = objs.get(i);
-	        if (obj.getTick() <= atTick && obj instanceof Clef) {
-	            lastClef = (Clef) obj;
-	            break; // trovato l’ultima chiave valida
+	        if (obj.getTick() >= atTick && clazz.isInstance(obj)) {
+	            return (T) obj; // cast sicuro perché controllato con isInstance
 	        }
 	    }
-
-	    return lastClef;
-	}
-	
-	public List<NoteEvent> getNotesAffectedByClef(Clef clef) {
-		int staffIndex = clef.getStaffIndex();
-		Staff staff = getStaff(staffIndex);
-
-		VoiceMixer mv = new VoiceMixer(this);
-		List<List<MusicObject>> mixed = mv.mixStaff(staff);
-
-		List<NoteEvent> result = new ArrayList<>();
-
-		for (List<MusicObject> voice : mixed) {
-
-			boolean inRange = false;
-
-			for (MusicObject obj : voice) {
-
-				// Inizio dell'intervallo: questa clef
-				if (obj == clef) {
-					inRange = true;
-					continue;
-				}
-
-				// Fine dell'intervallo: prossima clef
-				if (inRange && obj instanceof Clef) {
-					break;
-				}
-
-				// Nota influenzata
-				if (inRange && obj instanceof NoteEvent note) {
-					result.add(note);
-				}
-			}
-		}
-
-		return result;
+	    return null;
 	}
 
+	public void addAlteration(NoteEvent e, int alt) {
+		if (alt == 0) return;
+		if (e.getAlteration() >= 2 && alt > 0) return;
+		if (e.getAlteration() <= -2 && alt < 0) return;
+		if (alt > 0) e.addSharp(); else e.addFlat();
+		fireScoreEvent(new ScoreEvent(notation.ScoreEvent.Type.OBJECT_CHANGED, e));
+	}
 	
 	public void save() {
 		ScoreToXML s = new ScoreToXML(this);

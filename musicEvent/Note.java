@@ -22,6 +22,7 @@ import musicInterface.MusicObject;
  */
 public class Note extends NoteEvent implements Comparable<Note>, Serializable {
 
+	private boolean needsAccidental = false;
 	public Note() {
 		
 	}
@@ -163,9 +164,16 @@ public class Note extends NoteEvent implements Comparable<Note>, Serializable {
 		return true;
 	}
 
+	public void needsAccidental(boolean needsAccidental) {
+		this.needsAccidental = needsAccidental;
+	}
+	
+	public boolean needsAccidental() {
+		return needsAccidental;
+	}
+
 	@Override
 	public String toString() {
 		return " [" + midiNumber + "; " + alteration + "]";
 	}
-
 }

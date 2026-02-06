@@ -21,6 +21,8 @@ public class KeySignature extends MusicObject {
 	private static final int[] MINOR_SHARPS = { 0, 9, 4, 11, 6, 1, 8, 3 }; // A, E, B, F#, C#, G#, D#
 	private static final int[] MINOR_FLATS = { 5, 2, 6, 3, 7, 4, 8, 5, 9 }; // A, D, G, C, F, Bb, Eb
 
+	private static final int[] SHARP_SEQUENCE = { 6, 1, 8, 3, 10, 5, 0 }; // F C G D A E B
+	private static final int[] FLAT_SEQUENCE = { 10, 3, 8, 1, 6, 11, 4 }; // B E A D G C F 
 	public KeySignature(int numberOfAlterations, int typeOfAlterations, Modus modus) {
 		this.numberOfAlterations = numberOfAlterations;
 		this.typeOfAlterations = typeOfAlterations;
@@ -33,8 +35,7 @@ public class KeySignature extends MusicObject {
 		int tonic = getTonicMidi(numberOfAlterations, typeOfAlterations, modus);
 		alteredNotesMap = buildScale(tonic);
 		buildChromaticScale(alteredNotesMap);
-		System.out.println();
-		printMap(alteredNotesMap);
+		
 	}
 	
 	public int getAlteration(Note n) {
@@ -42,7 +43,6 @@ public class KeySignature extends MusicObject {
 	}
 	
 	public int getAlteration(int midi) {
-		System.out.println("*"+midi%12);
 		return alteredNotesMap.get(midi%12);
 	}
 
@@ -197,6 +197,36 @@ public class KeySignature extends MusicObject {
 		
 		return diatonicScale;
 	}
+	
+	public boolean requiresAccidental(int midi, int alt) {
+	    midi = midi % 12;
+	    int[] sequence = typeOfAlterations == 1 ? SHARP_SEQUENCE : FLAT_SEQUENCE;
+
+	    for (int i = 0; i < numberOfAlterations; i++) {
+	        int alteredNote = sequence[i]; // nota alterata dalla tonalità
+	        int naturalNote = (alteredNote - typeOfAlterations + 12) % 12; // nota naturale corrispondente
+
+	        // Caso 1: la nota è quella alterata dalla tonalità con la stessa alterazione
+	        if (midi == alteredNote && alt == typeOfAlterations) {
+	            return false; // nessun simbolo
+	        }
+
+	        // Caso 2: la nota è quella alterata ma con alterazione diversa (incluso naturale)
+	        if (midi == alteredNote && alt != typeOfAlterations) {
+	            return true; // serve simbolo
+	        }
+
+	        // Caso 3: la nota è la naturale corrispondente alla nota alterata (es. Do naturale in C#)
+	        if (midi == naturalNote && alt == 0) {
+	            return true; // serve bequadro
+	        }
+	    }
+
+	    // Caso 4: nota non alterata dalla tonalità
+	    return alt != 0; // serve simbolo solo se non naturale
+	}
+
+
 	
 	private void printMap(Map<Integer, Integer> map) {
 	    System.out.print("{");
