@@ -22,12 +22,15 @@ import musicEvent.Modus;
 import musicEvent.Note;
 import musicEvent.NoteEvent;
 import musicInterface.MusicObject;
+import services.ClefChangeService;
 
 public class Score implements Serializable, Iterable<Staff>, Observable {
 
 	private List<ScoreListener> listeners;
 	private List<Staff> staffList;
 	private final List<CurvedConnection> curvedConnections = new ArrayList<>();
+	ClefChangeService clefChangeService = new ClefChangeService(this);
+
 	private TimeSignature time;
 	private Partial partial;
 
@@ -94,10 +97,14 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 		for (int i = v; i <= voiceIndex; i++) {
 			s.addVoice();
 		}
-
 		obj.setStaff(staffIndex);
 		obj.setVoiceIndex(voiceIndex);
 		s.getVoice(voiceIndex).addObject(obj);
+		
+		if (obj instanceof Clef) {
+			clefChangeService.commitClefChange((Clef)obj);
+		}
+		
 
 		ScoreEvent e = new ScoreEvent(ScoreEvent.Type.OBJECT_ADDED, obj);
 		fireScoreEvent(e);
@@ -234,6 +241,23 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 
 	    return notesInRange;
 	}
+	
+	/** 
+	 * Ritorna una lista di tutte le note in tutte le voci
+	 * a partire da <i>tick</i> oppure una lista vuota.
+	 * @param staffNumber
+	 * @param tick
+	 * @return
+	 */
+	public List<NoteEvent> getAllNotesAfter(int staffNumber, int tick) {
+		List<MusicObject> list = getAllObjects();
+		List<NoteEvent> listNotes = new ArrayList<>();
+		for (MusicObject mo : list) {
+			if (mo instanceof NoteEvent note && note.getStaffIndex() == staffNumber && note.getTick() > tick)
+				listNotes.add(note);
+		}
+		return listNotes;
+	}
 
 	/** Restituisce lo staffList completo */
 	public List<Staff> getAllStaves() {
@@ -273,12 +297,23 @@ public class Score implements Serializable, Iterable<Staff>, Observable {
 		}
 
 		// 2. Nota
-		if (obj instanceof NoteEvent note) {
+		else if (obj instanceof NoteEvent note) {
 			removeNote(note);
 		}
-
+		
+		else if (obj instanceof Clef clef) {
+			removeClef(clef);
+		}
 		// 3. Altri MusicObject (bar, clef, rest, ecc.)
-		removeGenericObject(obj);
+		else removeGenericObject(obj);
+	}
+	
+	private void removeClef(Clef clef) {
+		int staffIndex = clef.getStaffIndex();
+		getStaff(staffIndex).getVoice(0).removeObject(clef);
+		clefChangeService.commitClefRemove(clef);
+		ScoreEvent ev = new ScoreEvent(ScoreEvent.Type.OBJECT_REMOVED, clef);
+		fireScoreEvent(ev);
 	}
 
 	private void removeGenericObject(MusicObject obj) {
@@ -731,6 +766,9 @@ System.out.println();
 		int staffIndex = o.getStaffIndex();
 		int voiceIndex = o.getVoiceIndex();
 		getStaff(staffIndex).getVoice(voiceIndex).changeTick(o, newTick);
+		if (o instanceof Clef) {
+			clefChangeService.commitClefChange((Clef)o);
+		}
 		System.out.println("Change Tick: StaffIndex " + staffIndex+", voiceIndex: "+ voiceIndex + ", Object: " +o + ", Tick: " + newTick);
 		
 	}
@@ -744,11 +782,11 @@ System.out.println();
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends MusicObject> T getLastObjectOfType(int staffIndex, int atTick, Class<T> clazz) {
-	    List<MusicObject> objs = getStaffWideObjects(getStaff(staffIndex));
+	public <T extends MusicObject> T getPreviousObjectOfType(int staffIndex, int atTick, Class<T> clazz) {
+	    List<MusicObject> objs = getAllObjects();
 	    for (int i = objs.size() - 1; i >= 0; i--) {
 	        MusicObject obj = objs.get(i);
-	        if (obj.getTick() <= atTick && clazz.isInstance(obj)) {
+	        if (clazz.isInstance(obj) && obj.getTick() < atTick) {
 	            return (T) obj; // cast sicuro perché abbiamo controllato con isInstance
 	        }
 	    }
@@ -761,16 +799,41 @@ System.out.println();
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends MusicObject> T getNextObjectOfType(int staffIndex, int atTick, Class<T> clazz) {
-	    List<MusicObject> objs = getStaffWideObjects(getStaff(staffIndex));
-	    for (int i = 0; i < objs.size(); i++) {
-	        MusicObject obj = objs.get(i);
-	        if (obj.getTick() >= atTick && clazz.isInstance(obj)) {
-	            return (T) obj; // cast sicuro perché controllato con isInstance
+	    List<MusicObject> objs = getAllObjects();
+
+	    for (MusicObject obj : objs) {
+	        if (obj.getStaffIndex() == staffIndex &&
+	            obj.getTick() > atTick &&
+	            clazz.isInstance(obj)) {
+	            return (T) obj;
 	        }
 	    }
 	    return null;
 	}
 
+
+	/**
+	 * Trova l'ultimo oggetto della classe <i>clazz</i> prima del tick <i>tick</i>.
+	 * Se non vi è nulla, restituisce <i>null</i>
+	 * @param staffIndex
+	 * @param atTick
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends MusicObject> T getLastObjectOfType(int staffIndex, int atTick, Class<T> clazz) {
+	    List<MusicObject> objs = getAllObjects();
+
+	    for (int i = objs.size() - 1; i >= 0; i--) {
+	        MusicObject obj = objs.get(i);
+	        if (obj.getStaffIndex() == staffIndex &&
+	            clazz.isInstance(obj)) {
+	            return (T) obj;
+	        }
+	    }
+	    return null;
+	}
+
+	
 	public void addAlteration(NoteEvent e, int alt) {
 		if (alt == 0) return;
 		if (e.getAlteration() >= 2 && alt > 0) return;

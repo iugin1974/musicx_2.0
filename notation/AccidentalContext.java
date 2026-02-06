@@ -4,49 +4,51 @@ import java.util.HashMap;
 import java.util.Map;
 
 import musicEvent.Note;
-import musicEvent.NoteEvent;
 import musicInterface.MusicObject;
 
 public class AccidentalContext implements ScoreListener {
-    private Map<Integer, Integer> lastAlteration = new HashMap<>();
-    private Score score;
+	private Map<Integer, Integer> lastAlteration = new HashMap<>();
+	private Score score;
 
-    public AccidentalContext(Score score) {
-        this.score = score;
-    }
+	public AccidentalContext(Score score) {
+		this.score = score;
+	}
 
-    @Override
-    public void scoreChanged(ScoreEvent e) {
-        if (!e.isMusicObjectEvent()) return; // solo note/music objects
+	private void checkForAlteration(Note n) {
+		int midi = n.getMidiNumber();
+		int alt = n.getAlteration();
+		int tick = n.getTick();
+		int staffIndex = n.getStaffIndex();
 
-        MusicObject mo = e.getMusicObject();
-        if (!(mo instanceof Note n)) return; // ignoriamo altre MusicObject
+		// ottieni la KeySignature corrente per lo staff e il tick
+		KeySignature ks = score.getPreviousObjectOfType(staffIndex, tick, KeySignature.class);
+		// chiamo la logica di KeySignature
+		boolean needsAccidental = ks.requiresAccidental(midi, alt);
 
-        int midi = n.getMidiNumber();
-        int alt = n.getAlteration();
-        int tick = n.getTick();
-        int staffIndex = n.getStaffIndex();
+		// controllo se la nota è già stata alterata nella misura
+		Integer previousAlt = lastAlteration.get(midi);
+		if (previousAlt != null && previousAlt == alt) {
+			needsAccidental = false;
+		}
 
-        // ottieni la KeySignature corrente per lo staff e il tick
-        KeySignature ks = score.getLastObjectOfType(staffIndex, tick, KeySignature.class);
-        // chiamo la logica di KeySignature
-        boolean needsAccidental = ks.requiresAccidental(midi, alt);
+		// aggiorno lo stato
+		lastAlteration.put(midi, alt);
 
-        // controllo se la nota è già stata alterata nella misura
-        Integer previousAlt = lastAlteration.get(midi);
-        if (previousAlt != null && previousAlt == alt) {
-            needsAccidental = false;
-        }
+		n.needsAccidental(needsAccidental);
+	}
 
-        // aggiorno lo stato
-        lastAlteration.put(midi, alt);
+	@Override
+	public void scoreChanged(ScoreEvent e) {
+		if (!e.isMusicObjectEvent())
+			return; // solo note/music objects
 
-        // 🔹 segnalo al NoteEvent (o MusicObject) che serve un simbolo
-            n.needsAccidental(needsAccidental);
-    }
+		MusicObject mo = e.getMusicObject();
+		if (!(mo instanceof Note n))
+			return; // ignoriamo altre MusicObject
+		checkForAlteration(n);
+	}
 
-
-    public void reset() {
-        lastAlteration.clear();
-    }
+	public void reset() {
+		lastAlteration.clear();
+	}
 }

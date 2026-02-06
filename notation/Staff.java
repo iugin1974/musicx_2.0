@@ -5,13 +5,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import Measure.Partial;
-import Measure.TimeSignature;
 import musicInterface.MusicObject;
 
 public class Staff implements Iterable<Voice> {
 
 	private List<Voice> voices;
-	//private TimeSignature timeSignature;
 	private Partial partial;
 	
 	protected Staff() {
@@ -61,38 +59,9 @@ public class Staff implements Iterable<Voice> {
 	    return -1;
 	}
 
-
-	protected KeySignature getLastKeySignature() {
-		Voice v = voices.get(0);
-		for (int i = v.size() - 1; i >= 0; i--) {
-			if (v.get(i) instanceof KeySignature) {
-				return ((KeySignature)v.get(i));
-			}
-		}
-		return null;
-	}
-	
-	protected Clef getLastClef() {
-		Voice v = voices.get(0);
-		for (int i = v.size() - 1; i >= 0; i--) {
-			if (v.get(i) instanceof Clef) {
-				return ((Clef)v.get(i));
-			}
-		}
-		return null;
-	}
-	
 	protected void clearVoice(int voiceNumber) {
 		getVoice(voiceNumber).clear();
 	}
-
-//	protected TimeSignature getTimeSignature() {
-//		return timeSignature;
-//	}
-//	
-//	protected void setTimeSignature(TimeSignature t) {
-//		timeSignature = t;
-//	}
 
 	protected void setPartial(Partial p) {
 		partial = p;
