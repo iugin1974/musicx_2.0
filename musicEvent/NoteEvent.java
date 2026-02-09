@@ -21,7 +21,7 @@ import notation.Tie;
 public abstract class NoteEvent extends MusicEvent {
 
 	protected int midiNumber = -1;
-	protected int alteration = 0;
+	protected Alteration alteration = null; // null se la nota non ha alterazione scritta
 	private Map<Integer, Lyric> lyrics = null;
 	private int staffPosition;
 	private boolean lyricExtender = false;
@@ -38,7 +38,7 @@ public abstract class NoteEvent extends MusicEvent {
 	public int getMidiNumber() {
 		return midiNumber;
 	}
-	
+		
 	public void setMidiNumber(int midi) {
 		if (midi < 0 || midi > 127) return;
 		midiNumber = midi;
@@ -48,39 +48,37 @@ public abstract class NoteEvent extends MusicEvent {
 		return midiNumber / 12;
 	}
 
-	public void setAlteration(int alteration) {
-		this.alteration = alteration;
-	}
-
-	public int getAlteration() {
-		return alteration;
-	}
-
 	public void addFlat() {
-		if (alteration <= -2)
-			return;
-		alteration--;
-		midiNumber--;
+	    if (alteration.equals(Alteration.NATURAL)) {
+	        alteration.setValue(Alteration.FLAT);
+	    } else if (alteration.getValue() > Alteration.DOUBLE_FLAT) {
+	        alteration.setValue(alteration.getValue() - 1);
+	    } else {
+	        return; // già DOUBLE_FLAT
+	    }
+	    midiNumber--;
 	}
+
 
 	public void addSharp() {
-		if (alteration >= 2)
-			return;
-		alteration++;
-		midiNumber++;
+	    if (alteration.equals(Alteration.NATURAL)) {
+	    	alteration.setValue(Alteration.SHARP);
+	    } else if (alteration.getValue() < Alteration.DOUBLE_SHARP) {
+	        alteration.setValue(alteration.getValue() + 1);
+	    } else {
+	        return; // già DOUBLE_SHARP
+	    }
+	    midiNumber++;
 	}
 
-	
-	/**
-	 * L'alterazione serve per stabilire se la nota ha un diesis
-	 * o un bemolle
-	 * @param alt
-	 */
-	public void alterate(int alt) {
-		alteration += alt;
-		midiNumber += alt;
+	public void setAlteration(Alteration alt) {
+	    this.alteration = alt;
 	}
-	
+
+	public Alteration getAlteration() {
+	    return alteration;
+	}
+
 	public void addLyric(Lyric lyric) {
 		if (lyrics == null) lyrics = new HashMap<>();
 		lyrics.put(lyric.getStanza(), lyric);
@@ -154,71 +152,6 @@ public abstract class NoteEvent extends MusicEvent {
 	    return slurs;
 	}
 	
-//	
-//	public void slurStart() {
-//		slurStart = true;
-//	}
-//
-//	public void slurEnd() {
-//		slurEnd = true;
-//	}
-//
-//	public void slurNone() {
-//		slurStart = slurEnd = false;
-//	}
-//
-//	public void tieStart() {
-//		tieStart = true;
-//	}
-//
-//	public void tieEnd() {
-//		tieEnd = true;
-//	}
-//
-//	public void tieNone() {
-//		tieStart = tieEnd = false;
-//	}
-//
-//	public boolean isSlurStart() {
-//		return slurStart;
-//	}
-//
-//	public boolean isSlurEnd() {
-//		return slurEnd;
-//	}
-//
-//	public boolean isTiedStart() {
-//		return tieStart;
-//	}
-//
-//	public boolean isTiedEnd() {
-//		return tieEnd;
-//	}
-//	
-//	public void setSlur(Slur slur) {
-//		this.slur = slur;
-//	}
-//
-//	public void setTie(Tie tie) {
-//		this.tie = tie;
-//	}
-//
-//	public Slur getSlur() {
-//		return slur;
-//	}
-//
-//	public Tie getTie() {
-//		return tie;
-//	}
-//	
-//	public boolean isCurveStart() {
-//		return isTiedStart() || isSlurStart();
-//	}
-//
-//	public boolean isCurveEnd() {
-//		return isTiedEnd() || isSlurEnd();
-//	}
-//	
 	public void setStaffPosition(int p) {
 		staffPosition = p;
 		System.out.println("Staff position: " +p);

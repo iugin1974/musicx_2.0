@@ -11,7 +11,7 @@ public class TestKeyAlteration {
 	private void los() {
 		ArrayList<Integer> notes;
 		KeyAlteration ka = new KeyAlteration();
-		notes = ka.getAlteredNoteNumbers(new Note(11,0), Modus.MAJOR_SCALE);
+		notes = ka.getAlteredNoteNumbers(new Note(11), Modus.MAJOR_SCALE);
 		System.out.println(notes.size() + " alterazioni.");
 		for (int i : notes)
 			System.out.print(i + " ");

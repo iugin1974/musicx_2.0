@@ -3,6 +3,8 @@ package musicEvent;
 import java.io.Serializable;
 
 import musicInterface.MusicObject;
+import notation.CurvedConnection;
+import notation.Lyric;
 
 /*
  * L'utente pu?o creare una nota con la frequenza
@@ -39,90 +41,81 @@ public class Note extends NoteEvent implements Comparable<Note>, Serializable {
 	}
 
 	/**
-	 * Costruisce una nota di 1/4 (default) in base al numero midi e
-	 * all'alterazione. L'alterazione indica solamente se la nota ha un diesis o
-	 * un bemolle. Questo vuol dire che la nota (66,1) sarà considerata come il
-	 * tasto nero tra fa e sol. Alterazione 1 vuol dire diesis. La nota sarà
-	 * dunque un f#.<br>
-	 * Al contrario (66,-1) sarà un solb.<br>
-	 * (66,0) non esiste.
-	 * 
-	 * @param midi
-	 *            il numero midi della nota
-	 * @param alteration
-	 *            l'alterazione scelta tra <i>Alteration.SHARP</i> o
-	 *            <i>Alteration.FLAT</i>.
+	 * Costruisce una nota di 1/4 (default) in base al numero midi e all'alterazione.
+	 * L'alterazione indica se la nota ha un diesis o un bemolle. 
+	 * (null = nessuna alterazione scritta, deriva da chiave/battuta)
+	 *
+	 * @param midi numero MIDI della nota
+	 * @param alteration alterazione come oggetto Alteration o null
 	 */
-	public Note(int midi, int alteration) {
-		this.alteration = alteration;
-		this.midiNumber = midi;
-		this.duration = 2;
-		this.dots = 0;
+	public Note(int midi, Alteration alteration) {
+	    this.alteration = alteration;
+	    this.midiNumber = midi;
+	    this.duration = 2;
+	    this.dots = 0;
 	}
 
 	/**
-	 * Costruisce una nota di valore <i>duration</i> in base al numero midi e
-	 * all'alterazione. L'alterazione indica solamente se la nota ha un diesis o
-	 * un bemolle. Questo vuol dire che la nota (66,1) sarà considerata come il
-	 * tasto nero tra fa e sol. Alterazione 1 vuol dire diesis. La nota sarà
-	 * dunque un f#.<br>
-	 * Al contrario (66,-1) sarà un solb.<br>
-	 * (66,0) non esiste.
-	 * 
-	 * @param midi
-	 *            il numero midi della nota
-	 * @param alteration
-	 *            l'alterazione scelta tra <i>Alteration.SHARP</i> o
-	 *            <i>Alteration.FLAT</i>.
-	 * @param duration
-	 *            La durata dell'evento calcolata nel seguente modo:<br>
-	 *            0 = 4/4<br>
-	 *            1 = 2/4<br>
-	 *            2 = 1/4<br>
-	 *            ecc.
+	 * Costruisce una nota di valore duration in base al numero midi e all'alterazione.
+	 *
+	 * @param midi numero MIDI della nota
+	 * @param alteration alterazione come oggetto Alteration o null
+	 * @param duration durata della nota (2 = 1/4)
 	 */
-	public Note(int midi, int alteration, int duration) {
-		this.alteration = alteration;
-		this.midiNumber = midi;
-		this.duration = duration;
-		this.dots = 0;
+	public Note(int midi, Alteration alteration, int duration) {
+	    this.alteration = alteration;
+	    this.midiNumber = midi;
+	    this.duration = duration;
+	    this.dots = 0;
 	}
 
 	/**
-	 * Costruisce una nota di valore <i>duration</i> in base al numero midi e
-	 * all'alterazione. L'alterazione indica solamente se la nota ha un diesis o
-	 * un bemolle. Questo vuol dire che la nota (66,1) sarà considerata come il
-	 * tasto nero tra fa e sol. Alterazione 1 vuol dire diesis. La nota sarà
-	 * dunque un f#.<br>
-	 * Al contrario (66,-1) sarà un solb.<br>
-	 * (66,0) non esiste.
-	 * 
-	 * @param midi
-	 *            il numero midi della nota
-	 * @param alteration
-	 *            l'alterazione scelta tra <i>Alteration.SHARP</i> o
-	 *            <i>Alteration.FLAT</i>.
-	 * @param duration
-	 *            La durata dell'evento calcolata nel seguente modo:<br>
-	 *            0 = 4/4<br>
-	 *            1 = 2/4<br>
-	 *            2 = 1/4<br>
-	 *            ecc.
+	 * Costruisce una nota con durata e numero di puntini.
+	 *
+	 * @param midi numero MIDI della nota
+	 * @param alteration alterazione come oggetto Alteration o null
+	 * @param duration durata
+	 * @param dots numero di puntini
 	 */
-	public Note(int midi, int alteration, int duration, int dots) {
-		this.alteration = alteration;
-		this.midiNumber = midi;
-		this.duration = duration;
-		this.dots = dots;
+	public Note(int midi, Alteration alteration, int duration, int dots) {
+	    this.alteration = alteration;
+	    this.midiNumber = midi;
+	    this.duration = duration;
+	    this.dots = dots;
 	}
+
 
 	@Override
 	public Note getCopy() {
-		Note n = new Note(midiNumber, alteration, duration, dots);
-		n.setTick(this.getTick());
-		// TODO -> finisci la copia
-		return n;
+	    Alteration altCopy =  new Alteration(alteration.getValue());
+	    
+	    Note copy = new Note(midiNumber, altCopy, duration, dots);
+	    copy.setTick(this.getTick());
+	    copy.setStaffPosition(this.getStaffPosition());
+	    copy.setLyricExtender(this.hasLyricExtender());
+	    copy.setSyllableDivision(this.hasSyllableDivision());
+	    copy.setSkipText(this.isSkipText());
+	    
+	    // copia del flag needsAccidental
+	    copy.needsAccidental = this.needsAccidental;
+//TODO q	quello qua sotto
+//	    // copia lyrics
+//	    if (this.hasLyric()) {
+//	        for (int stanza = 0; stanza < this.getNumberOfStanzas(); stanza++) {
+//	            Lyric lyric = this.getLyric(stanza);
+//	            if (lyric != null) copy.addLyric(lyric.copy()); // assume Lyric ha metodo copy()
+//	        }
+//	    }
+
+//	    // copia curved connections
+//	    for (CurvedConnection c : this.getCurvedConnections()) {
+//	        copy.addCurvedConnection(c.copy()); // assume CurvedConnection ha metodo copy()
+//	    }
+
+	    return copy;
 	}
+
+
 	
 	public boolean equalsHeight(Note note) {
 		return midiNumber == note.getMidiNumber();
@@ -164,16 +157,22 @@ public class Note extends NoteEvent implements Comparable<Note>, Serializable {
 		return true;
 	}
 
-	public void needsAccidental(boolean needsAccidental) {
-		this.needsAccidental = needsAccidental;
-	}
-	
-	public boolean needsAccidental() {
-		return needsAccidental;
-	}
-
 	@Override
 	public String toString() {
-		return " [" + midiNumber + "; " + alteration + "]";
+	    String symbol = "";
+
+	    if (alteration != null) {
+	        switch (alteration.getValue()) {
+	            case Alteration.DOUBLE_FLAT:  symbol = "♭♭"; break;
+	            case Alteration.FLAT:         symbol = "♭";  break;
+	            case Alteration.NATURAL:      symbol = "♮";  break;
+	            case Alteration.SHARP:        symbol = "♯";  break;
+	            case Alteration.DOUBLE_SHARP: symbol = "𝄪";  break;
+	            default:                      symbol = "?";  break;
+	        }
+	    }
+
+	    return " [" + midiNumber + "; " + (alteration != null ? alteration.getValue() : 0) + "]" + symbol;
 	}
+
 }

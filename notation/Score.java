@@ -18,6 +18,7 @@ import org.xml.sax.SAXException;
 
 import Measure.Partial;
 import Measure.TimeSignature;
+import musicEvent.Alteration;
 import musicEvent.Modus;
 import musicEvent.Note;
 import musicEvent.NoteEvent;
@@ -836,8 +837,8 @@ System.out.println();
 	
 	public void addAlteration(NoteEvent e, int alt) {
 		if (alt == 0) return;
-		if (e.getAlteration() >= 2 && alt > 0) return;
-		if (e.getAlteration() <= -2 && alt < 0) return;
+		if (e.getAlteration().getValue() >= 2 && alt > 0) return;
+		if (e.getAlteration().getValue() <= -2 && alt < 0) return;
 		if (alt > 0) e.addSharp(); else e.addFlat();
 		fireScoreEvent(new ScoreEvent(notation.ScoreEvent.Type.OBJECT_CHANGED, e));
 	}
@@ -847,7 +848,6 @@ System.out.println();
 		try {
 			s.parse();
 		} catch (ParserConfigurationException | SAXException | IOException | TransformerException e) {
-			// TODO Auto-generated catch block
 		}
 	}
 

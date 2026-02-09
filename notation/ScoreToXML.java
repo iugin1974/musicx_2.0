@@ -20,6 +20,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import Measure.Bar;
+import musicEvent.Alteration;
 import musicEvent.Note;
 import musicEvent.Rest;
 import musicInterface.MusicObject;
@@ -108,7 +109,7 @@ public class ScoreToXML {
 
 	private Note parseNote(Element noteEl, int tick) {
 		int midi = stringAsInt(noteEl.getAttribute("midi"));
-		int alteration = stringAsInt(noteEl.getAttribute("alteration"));
+		Alteration alteration = new Alteration(stringAsInt(noteEl.getAttribute("alteration")));
 		int duration = stringAsInt(noteEl.getAttribute("duration"));
 		int dots = stringAsInt(noteEl.getAttribute("dots"));
 		Note n = new Note( midi,  alteration,  duration,  dots);
@@ -222,7 +223,7 @@ public class ScoreToXML {
 	private Element parseNote(Note mo, Document doc) {
 		Element e = doc.createElement("note");
 		e.setAttribute("midi", intAsString(mo.getMidiNumber()));
-		e.setAttribute("alteration", intAsString(mo.getAlteration()));
+		e.setAttribute("alteration", intAsString(mo.getAlteration().getValue())); // può essere null
 		e.setAttribute("duration", intAsString(mo.getDuration()));
 		e.setAttribute("dots", intAsString(mo.getDots()));
 		return e;

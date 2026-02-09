@@ -18,7 +18,7 @@ public class TestIntervall {
 		int midi = 69;
 		Scale s = new Scale(new Note(midi), Modus.MAJOR_SCALE);
 		NamedNote.setLanguage("IT");
-		NamedNote n1 = new NamedNote(midi, 0);
+		NamedNote n1 = new NamedNote(midi);
 		for (int i = midi; i <= midi + 12; i++) {
 			Note n2 = s.getNote(i);
 			int[] intvs = itv.calculateIntervall(n1, n2);

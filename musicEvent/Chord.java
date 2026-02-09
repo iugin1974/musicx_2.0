@@ -89,9 +89,9 @@ public class Chord extends NoteEvent implements Serializable  {
 		this.midiNumber = midiNumber;
 	}
 
-	public void setAlteration(int alteration) {
+	public void setAlteration(Alteration alteration) {
 		for (int i = 0; i < notes.size(); i++) {
-			notes.get(i).setAlteration(i);
+			notes.get(i).setAlteration(alteration);
 		}
 	}
 

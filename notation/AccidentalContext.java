@@ -3,52 +3,89 @@ package notation;
 import java.util.HashMap;
 import java.util.Map;
 
+import Measure.Bar;
+import musicEvent.Alteration;
 import musicEvent.Note;
 import musicInterface.MusicObject;
 
-public class AccidentalContext implements ScoreListener {
-	private Map<Integer, Integer> lastAlteration = new HashMap<>();
-	private Score score;
+/**
+ * Gestisce il contesto degli accidentali in uno spartito musicale.
+ * <p>
+ * Tiene traccia delle alterazioni già applicate alle note all'interno di una misura
+ * e determina se una nota necessita di un accidental secondo la chiave corrente.
+ * </p>
+ */
+public class AccidentalContext {
 
-	public AccidentalContext(Score score) {
-		this.score = score;
-	}
+    /**
+     * Classe interna che memorizza lo stato di una nota: midiNumber e alterazione.
+     */
+    private static class NoteState {
+        int midi;
+        Alteration alteration;
 
-	private void checkForAlteration(Note n) {
-		int midi = n.getMidiNumber();
-		int alt = n.getAlteration();
-		int tick = n.getTick();
-		int staffIndex = n.getStaffIndex();
+        NoteState(int midi, Alteration alt) {
+            this.midi = midi;
+            this.alteration = alt;
+        }
+    }
 
-		// ottieni la KeySignature corrente per lo staff e il tick
-		KeySignature ks = score.getPreviousObjectOfType(staffIndex, tick, KeySignature.class);
-		// chiamo la logica di KeySignature
-		boolean needsAccidental = ks.requiresAccidental(midi, alt);
+    /** Mappa che associa ogni nota al suo stato corrente */
+    private Map<Note, NoteState> noteState;
+    private AccidentalEngine engine;
+    /** Lo spartito musicale a cui questo contesto si riferisce */
+    private Score score;
 
-		// controllo se la nota è già stata alterata nella misura
-		Integer previousAlt = lastAlteration.get(midi);
-		if (previousAlt != null && previousAlt == alt) {
-			needsAccidental = false;
-		}
+    /**
+     * Costruisce un contesto di accidentali per lo spartito dato.
+     *
+     * @param score lo spartito musicale da monitorare
+     * @engine il motore di calcolo delle alterazioni nella battuta
+     */
+    public AccidentalContext(Score score) {
+        this.score = score;
+        engine = new AccidentalEngine(this.score);
+        noteState = new HashMap<>();
+    }
+    /**
+     * Verifica se una nota necessita di un accidental.
+     * <p>
+     * La logica segue questi passaggi:
+     * <ul>
+     *   <li>Recupera la key signature corrente per lo staff e il tick della nota</li>
+     *   <li>Chiede alla key signature se la nota necessita di un accidental</li>
+     *   <li>Controlla se la nota è già stata processata con gli stessi valori</li>
+     *   <li>Aggiorna lo stato della nota nella mappa</li>
+     *   <li>Imposta lo stato di accidental sulla nota</li>
+     * </ul>
+     * </p>
+     *
+     * @param n la nota da verificare
+     */
+    private void checkForAlteration(Note n) {
+        int midi = n.getMidiNumber();
+        Alteration alt = n.getAlteration();
 
-		// aggiorno lo stato
-		lastAlteration.put(midi, alt);
+        // Controlla se la nota è già stata processata con gli stessi valori
+        NoteState prevState = noteState.get(n);
+        if (prevState != null && prevState.midi == midi && prevState.alteration == alt) {
+            // La nota è già stata processata nella misura, quindi non serve cambiare nulla
+            return;
+        }
 
-		n.needsAccidental(needsAccidental);
-	}
+        // Aggiorna lo stato della nota nella mappa
+        noteState.put(n, new NoteState(midi, alt));
 
-	@Override
-	public void scoreChanged(ScoreEvent e) {
-		if (!e.isMusicObjectEvent())
-			return; // solo note/music objects
+        // Il flag needsAccidental è già calcolato dall'engine
+        // Qui non facciamo altro, la nota mantiene il flag impostato
+    }
 
-		MusicObject mo = e.getMusicObject();
-		if (!(mo instanceof Note n))
-			return; // ignoriamo altre MusicObject
-		checkForAlteration(n);
-	}
+    /**
+     * Resetta lo stato delle alterazioni all'inizio di una nuova misura.
+     * Deve essere chiamato quando arriva una stanghetta.
+     */
+    public void reset() {
+        noteState.clear();
+    }
 
-	public void reset() {
-		lastAlteration.clear();
-	}
 }

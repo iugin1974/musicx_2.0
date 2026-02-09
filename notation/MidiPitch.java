@@ -1,10 +1,12 @@
 package notation;
 
+import musicEvent.Alteration;
+
 public final class MidiPitch {
     private final int midiNumber;
-    private final int alteration;
+    private final Alteration alteration;
 
-    public MidiPitch(int midiNumber, int alteration) {
+    public MidiPitch(int midiNumber, Alteration alteration) {
         this.midiNumber = midiNumber;
         this.alteration = alteration;
     }
@@ -13,12 +15,12 @@ public final class MidiPitch {
         return midiNumber;
     }
 
-    public int getAlteration() {
+    public Alteration getAlteration() {
         return alteration;
     }
 
     @Override
     public String toString() {
-    	return "["+midiNumber+", "+alteration+"]";
+    	return "["+midiNumber+", "+alteration.getValue()+"]";
     }
 }

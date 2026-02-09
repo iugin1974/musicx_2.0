@@ -1,5 +1,6 @@
 package Tests;
 
+import musicEvent.Alteration;
 import musicEvent.NamedNote;
 
 public class TestNote {
@@ -9,7 +10,7 @@ public class TestNote {
 		NamedNote.setLanguage("IT");
 		for (int i= 60; i<=72; i++) {
 			for (int a=-2; a<=2; a++) {
-				NamedNote nn = new NamedNote(i, a);
+				NamedNote nn = new NamedNote(i, new Alteration(a));
 				//nn.setDots(1);
 				nn.setDuration(1);
 				System.out.print(nn+"\t");

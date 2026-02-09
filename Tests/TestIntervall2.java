@@ -13,8 +13,8 @@ public class TestIntervall2 {
 	private void los() {
 		Intervall itv = new Intervall();
 		NamedNote.setLanguage("IT");
-		NamedNote n1 = new NamedNote(65, 0);
-		NamedNote n2 = new NamedNote(71, 0);
+		NamedNote n1 = new NamedNote(65);
+		NamedNote n2 = new NamedNote(71);
 		
 		
 			int[] intvs = itv.calculateIntervall(n1, n2);

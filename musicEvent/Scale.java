@@ -74,7 +74,7 @@ public class Scale {
 					break;
 				}
 			}
-			if (!addedFromKey) tones.add(new Note(midi, 0));
+			if (!addedFromKey) tones.add(new Note(midi, null));
 		}
 		
 		i=intervals.length-1;
@@ -92,7 +92,7 @@ public class Scale {
 					break;
 				}
 			}
-			if (!addedFromKey) tones.add(new Note(midi, 0));
+			if (!addedFromKey) tones.add(new Note(midi, null));
 		}
 		Collections.sort(tones);
 		return tones;
@@ -100,7 +100,7 @@ public class Scale {
 	
 	private void createFullChromaticScale() {
 
-		int alterationType = ScaleType.getScaleAlterationType(tonic, modus);
+		Alteration alteration = ScaleType.getScaleAlterationType(tonic, modus);
 		ArrayList<Integer> keyAlteration = getKeyAlteration(tonic, modus);
 
 		// la tonica più bassa
@@ -127,7 +127,7 @@ public class Scale {
 			 */
 			int interval = intervals[arrayIterator++ % intervals.length];
 			if (interval == 0)
-				insertDiatonicNote(keyAlteration, alterationType, i);
+				insertDiatonicNote(keyAlteration, alteration, i);
 		}
 
 		arrayIterator = 12 - lowestTonic;
@@ -158,21 +158,23 @@ public class Scale {
 	 *            il numero della nota nella scala
 	 */
 	private void insertDiatonicNote(ArrayList<Integer> keyAlteration,
-			int alterationType, int noteNumber) {
+	        Alteration alterationType, int noteNumber) {
 
-		Note nn = null;
+	    Note nn;
 
-		/*
-		 * Se la nota è compresa nelle alterazioni di chiave, viene inserita con
-		 * alterazioni.
-		 */
-		if (contains(keyAlteration, noteNumber % 12)) {
-			nn = new Note(noteNumber, alterationType);
-		} else {
-			nn = new Note(noteNumber, 0);
-		}
-		fullChromaticScale[noteNumber] = nn;
+	    /*
+	     * Se la nota è compresa nelle alterazioni di chiave, viene inserita con
+	     * alterazioni.
+	     */
+	    if (contains(keyAlteration, noteNumber % 12)) {
+	        nn = new Note(noteNumber, alterationType);
+	    } else {
+	        nn = new Note(noteNumber, null); // nessuna alterazione esplicita
+	    }
+
+	    fullChromaticScale[noteNumber] = nn;
 	}
+
 
 	/**
 	 * Inserisce una nuova nota in <i>fullChromaticScale</i>
@@ -186,20 +188,29 @@ public class Scale {
 	 */
 	private void insertChromaticNote(int interval, int noteNumber) {
 
-		Note nn = null;
+	    Note nn;
 
-		/*
-		 * interval può solo essere -1 o 1. Se è 1 la nota precedente a
-		 * noteNumber viene innalzata. Se -1 quella seguente abbassata. Così in
-		 * do maggiore, la posizione 6 dell'array interval corrisponde a 1. Vuol
-		 * dire che la nota 6 (fa#) è und fa innalzato di 1
-		 */
-		if (interval == -1) interval = -1 + fullChromaticScale[(noteNumber+1)%128].getAlteration();
-		if (interval == 1 && noteNumber > 0) interval = 1 + fullChromaticScale[noteNumber-1].getAlteration();
-		//TODO se l'intervallo è -1 prende l'alterazione della nota successiva -1
-		// FIXME non funziona ancora. In do e re si, ma in reb no. La nota 11 è null
-		nn = new Note(noteNumber, interval);
-		fullChromaticScale[noteNumber] = nn;
+	    /*
+	     * interval può solo essere -1 o 1. 
+	     * Se è 1 la nota precedente a noteNumber viene innalzata. 
+	     * Se -1 quella seguente abbassata.
+	     */
+	    if (interval == -1) {
+	        Note nextNote = fullChromaticScale[(noteNumber + 1) % 128];
+	        int nextAlterValue = (nextNote.getAlteration() != null) ? nextNote.getAlteration().getValue() : 0;
+	        interval = -1 + nextAlterValue;
+	    }
+	    if (interval == 1 && noteNumber > 0) {
+	        Note prevNote = fullChromaticScale[noteNumber - 1];
+	        int prevAlterValue = (prevNote.getAlteration() != null) ? prevNote.getAlteration().getValue() : 0;
+	        interval = 1 + prevAlterValue;
+	    }
+
+	    // crea una nuova Alteration basata sull'intervallo calcolato
+	    Alteration alt = new Alteration(interval);
+	    nn = new Note(noteNumber, alt);
+
+	    fullChromaticScale[noteNumber] = nn;
 	}
 
 

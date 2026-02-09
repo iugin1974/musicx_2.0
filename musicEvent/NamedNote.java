@@ -15,7 +15,7 @@ public class NamedNote extends Note {
 		super(midi);
 	}
 
-	public NamedNote(int midi, int alteration) {
+	public NamedNote(int midi, Alteration alteration) {
 		super(midi, alteration);
 		if (mapNoteName == null) {
 			mapNoteName = new HashMap<Integer, String>();
@@ -29,7 +29,7 @@ public class NamedNote extends Note {
 		}
 	}
 
-	public NamedNote(int midi, int alteration, int duration) {
+	public NamedNote(int midi, Alteration alteration, int duration) {
 		super(midi, alteration, duration);
 		if (mapNoteName == null) {
 			mapNoteName = new HashMap<Integer, String>();
@@ -89,30 +89,31 @@ public class NamedNote extends Note {
 		 * in insertChromaticNote un controllo c'è che guarda che la
 		 * nota sia >0 o <127. Così la nota 0 non viene calcolata o qualcosa del genere...
 		 */
-		if (midiNumber%12 == 0 && alteration ==1) name = mapNoteName.get(11);
-		else if (midiNumber%12 == 11 && alteration == -1) name = mapNoteName.get(0);
-		else name = mapNoteName.get(((midiNumber % 12) - alteration)%12);
-		/*
-		 * Qui sopra c'è due volte un %12, perché
-		 * [70, -2] (cbb) ritornava 12, che è
-		 * fuori dai valori della map
-		 */
-		if (name == null) return null;
-		String alt = "";
-		switch (getAlteration()) {
-		case -2:
-			alt = alterations[0];
-			break;
-		case -1:
-			alt = alterations[1];
-			break;
-		case 1:
-			alt = alterations[2];
-			break;
-		case 2:
-			alt = alterations[3];
-			break;
+
+		// gestione casi particolari per Do♭ e Si♯
+		if (midiNumber % 12 == 0 && alteration != null && alteration.getValue() == 1) {
+		    name = mapNoteName.get(11); // Si
+		} else if (midiNumber % 12 == 11 && alteration != null && alteration.getValue() == -1) {
+		    name = mapNoteName.get(0); // Do
+		} else {
+		    int alterValue = (alteration != null) ? alteration.getValue() : 0;
+		    int key = (midiNumber % 12 - alterValue + 12) % 12; // +12 per evitare negativi
+		    name = mapNoteName.get(key);
 		}
+
+		if (name == null) return null;
+
+		String alt = "";
+		if (alteration != null) {
+		    switch (alteration.getValue()) {
+		        case Alteration.DOUBLE_FLAT:  alt = alterations[0]; break;
+		        case Alteration.FLAT:         alt = alterations[1]; break;
+		        case Alteration.SHARP:        alt = alterations[2]; break;
+		        case Alteration.DOUBLE_SHARP: alt = alterations[3]; break;
+		        case Alteration.NATURAL:      alt = alterations[4]; break; // opzionale, se hai ♮
+		    }
+		}
+
 		name = name + alt;
 		name = checkException(name);
 		return name;

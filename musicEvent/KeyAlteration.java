@@ -40,33 +40,43 @@ public class KeyAlteration {
 	 */
 	public ArrayList<Integer> getAlteredNoteNumbers(Note tonic, Modus modus) {
 
-		int alterationType = ScaleType.getScaleAlterationType(tonic, modus);
-		ArrayList<Integer> notes = new ArrayList<>();
-		// traporta il numero MIDI della nota nella prima ottava
-		int midi = tonic.getMidiNumber() % 12;
-		if (midi == 0 && modus == Modus.MAJOR_SCALE)
-			return notes; // do maggiore
-		if (midi == 9 && modus == Modus.MINOR_SCALE)
-			return notes; // la minore
+	    Alteration alterationType = ScaleType.getScaleAlterationType(tonic, modus);
+	    ArrayList<Integer> notes = new ArrayList<>();
+	    // trasporta il numero MIDI della nota nella prima ottava
+	    int midi = tonic.getMidiNumber() % 12;
 
-		if (alterationType == Alteration.FLAT)
-			getFlats(notes, midi, modus);
-		else if (alterationType == Alteration.SHARP)
-			getSharps(notes, midi, modus);
+	    // tonalità senza alterazioni
+	    if ((midi == 0 && modus == Modus.MAJOR_SCALE) || (midi == 9 && modus == Modus.MINOR_SCALE)) {
+	        return notes;
+	    }
 
-		return notes;
+	    if (alterationType != null) {
+	        if (alterationType.getValue() > 0) {
+	            getSharps(notes, midi, modus);
+	        } else if (alterationType.getValue() < 0) {
+	            getFlats(notes, midi, modus);
+	        }
+	    }
+
+	    return notes;
 	}
 
 	public ArrayList<Note> getAlteredNotes(Note tonic, Modus modus) {
-		ArrayList<Note> notes = new ArrayList<>();
-		ArrayList<Integer> numbers = getAlteredNoteNumbers(tonic, modus);
-		int alterationType = ScaleType.getScaleAlterationType(tonic, modus);
+	    ArrayList<Note> notes = new ArrayList<>();
+	    ArrayList<Integer> numbers = getAlteredNoteNumbers(tonic, modus);
+	    Alteration alterationType = ScaleType.getScaleAlterationType(tonic, modus);
 
-		for (int i = 0; i < numbers.size(); i++) {
-			notes.add(new Note(numbers.get(i), alterationType));
-		}
-		return notes;
+	    for (int num : numbers) {
+	        if (alterationType != null) {
+	            notes.add(new Note(num, new Alteration(alterationType.getValue())));
+	        } else {
+	            notes.add(new Note(num, null));
+	        }
+	    }
+
+	    return notes;
 	}
+
 
 	private void getSharps(ArrayList<Integer> notes, int midi, Modus modus) {
 		// individua la posizione della nota nell'array

@@ -20,14 +20,23 @@ public class Intervall {
 	 * @return
 	 */
 	private Note[] transposeNotes(Note n1, Note n2) {
-		Note[] n = new Note[2];
-		int alt = n1.getAlteration();
-		Note tmp1 = new Note(n1.getMidiNumber()-alt, n1.getAlteration()-alt);
-		Note tmp2 = new Note(n2.getMidiNumber()-alt, n2.getAlteration()-alt);
-		n[0] = tmp1;
-		n[1] = tmp2;
-		return n;
+	    Note[] n = new Note[2];
+
+	    int alt = n1.getAlteration().getValue();
+
+	    // crea nuove alterazioni normalizzate
+	    Alteration alt1 =  new Alteration(n1.getAlteration().getValue() - alt);
+	    Alteration alt2 =  new Alteration(n2.getAlteration().getValue() - alt);
+	    // crea nuove note
+	    Note tmp1 = new Note(n1.getMidiNumber() - alt, alt1);
+	    Note tmp2 = new Note(n2.getMidiNumber() - alt, alt2);
+
+	    n[0] = tmp1;
+	    n[1] = tmp2;
+
+	    return n;
 	}
+
 	
 	/**
 	 * Calcola il segno dell'intervallo e se necessario
@@ -67,7 +76,9 @@ public class Intervall {
 		 * l'intervallo c-d (seconda). Quindi deve eliminare
 		 * l'alterazione dalla seconda nota
 		 */
-		int endMidi = n2.getMidiNumber()-n2.getAlteration();
+		int alterationValue = n2.getAlteration().getValue();
+		int endMidi = n2.getMidiNumber() - alterationValue;
+
 		while (true) {
 			if (sc.getNote(midi).getMidiNumber() == endMidi) break; 
 			if (sc.getNote(midi).getMidiNumber() > endMidi) {

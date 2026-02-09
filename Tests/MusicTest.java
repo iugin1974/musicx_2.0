@@ -22,7 +22,7 @@ public class MusicTest {
     @BeforeEach
     void setUp() {
         keyAlteration = new KeyAlteration();
-        cNote = new Note(0, 0); // Do naturale
+        cNote = new Note(0); // Do naturale
         score = new Score();
         score.addStaff();
     }
@@ -35,7 +35,7 @@ public class MusicTest {
 
     @Test
     void testKeyAlterationG_Major() {
-        Note gNote = new Note(7, 0); // Sol
+        Note gNote = new Note(7); // Sol
         ArrayList<Integer> altered = keyAlteration.getAlteredNoteNumbers(gNote, Modus.MAJOR_SCALE);
         assertEquals(1, altered.size(), "G major should have one sharp");
         assertEquals(6, altered.get(0), "The sharp should be F#");

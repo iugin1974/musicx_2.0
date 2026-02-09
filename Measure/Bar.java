@@ -35,7 +35,7 @@ public class Bar extends MusicObject {
         bar = " \\bar \":|\" ";
     }
 
-    private void setSingleBar() {
+    public void setSingleBar() {
         type = Type.SINGLE;
         bar = " | ";
     }
